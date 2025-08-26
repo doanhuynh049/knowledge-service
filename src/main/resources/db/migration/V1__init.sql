@@ -6,7 +6,7 @@ CREATE TABLE users (
     id BIGSERIAL PRIMARY KEY,
     email VARCHAR(255) NOT NULL UNIQUE,
     timezone VARCHAR(100) NOT NULL DEFAULT 'Asia/Ho_Chi_Minh',
-    delivery_hour_local INTEGER NOT NULL DEFAULT 9,
+    delivery_hour_local INTEGER NOT NULL DEFAULT 6,
     prefs_json TEXT DEFAULT '{}',
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
 );
@@ -74,7 +74,7 @@ CREATE TABLE settings (
     email_mode VARCHAR(20) DEFAULT 'DIGEST_AND_SPLIT',
     max_deep_dives_per_day INTEGER DEFAULT 5,
     model VARCHAR(50) DEFAULT 'gpt-3.5-turbo',
-    temperature DECIMAL(3,2) DEFAULT 0.7,
+    temperature FLOAT DEFAULT 0.7,
     max_tokens INTEGER DEFAULT 2000,
     cc_list_json TEXT DEFAULT '[]',
     CONSTRAINT fk_settings_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,

@@ -78,7 +78,7 @@ For local development with H2 database:
 export SPRING_PROFILES_ACTIVE=dev
 
 # Run locally
-./mvnw spring-boot:run
+mvn spring-boot:run
 
 # Access H2 console: http://localhost:8080/h2-console
 # JDBC URL: jdbc:h2:mem:testdb
@@ -245,30 +245,30 @@ The system automatically processes emails every 10 minutes:
 
 ```bash
 # Run all tests
-./mvnw test
+mvn test
 
 # Run with Testcontainers (requires Docker)
-./mvnw test -P integration-tests
+mvn test -P integration-tests
 ```
 
 ### Code Formatting
 
 ```bash
 # Check formatting
-./mvnw spotless:check
+mvn spotless:check
 
 # Apply formatting
-./mvnw spotless:apply
+mvn spotless:apply
 ```
 
 ### Database Migrations
 
 ```bash
 # Run migrations
-./mvnw flyway:migrate
+mvn flyway:migrate
 
 # Migration info
-./mvnw flyway:info
+mvn flyway:info
 ```
 
 ## Monitoring
