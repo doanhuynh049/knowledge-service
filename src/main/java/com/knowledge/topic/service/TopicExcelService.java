@@ -274,6 +274,7 @@ public class TopicExcelService {
         headerRow.createCell(3).setCellValue("Priority");
         headerRow.createCell(4).setCellValue("Status");
         headerRow.createCell(5).setCellValue("Description");
+        headerRow.createCell(6).setCellValue("Last Processed");
     }
 
     private void createLogHeaderRow(Sheet sheet) {
@@ -334,28 +335,36 @@ public class TopicExcelService {
         addTopics(sampleTopics);
     }
 
+    private void updateTopicInSheet(Sheet sheet, Topic topic, LocalDateTime processedTime) {
+        for (Row row : sheet) {
+            if (row.getRowNum() == 0) continue; // Skip header row
+            
+            String rowTopicName = getCellValueAsString(row.getCell(1)); // Topic Name is in column 1
+            if (rowTopicName != null && rowTopicName.trim().equals(topic.getName())) {
+                // Update status to DONE
+                Cell statusCell = row.getCell(4);
+                if (statusCell == null) {
+                    statusCell = row.createCell(4);
+                }
+                statusCell.setCellValue("DONE");
+                
+                // Add last processed timestamp (extend the row if needed)
+                Cell lastProcessedCell = row.getCell(6);
+                if (lastProcessedCell == null) {
+                    lastProcessedCell = row.createCell(6);
+                }
+                lastProcessedCell.setCellValue(processedTime.format(DATE_FORMATTER));
+                
+                log.debug("Updated topic '{}' status to DONE in Excel sheet", topic.getName());
+                break;
+            }
+        }
+    }
+
     private List<Topic> getDefaultTopics(int limit) {
         List<Topic> defaultTopics = List.of(
                 new Topic("Java Collections Framework", "Collections & Generics", "Intermediate", 5,
-                         "Core framework for data structures like List, Set, and Map; understanding performance trade-offs is crucial for writing efficient code."),
-                new Topic("Generics and Type Safety", "Collections & Generics", "Intermediate", 5,
-                         "Provides stronger type checks at compile time and reduces runtime errors, enabling reusable and flexible code."),
-                new Topic("Lambda Expressions", "Functional Programming", "Intermediate", 4,
-                         "Functional programming constructs that enable cleaner, more readable code and support for stream processing."),
-                new Topic("Stream API", "Functional Programming", "Intermediate", 4,
-                         "Powerful API for processing collections with functional programming paradigms, enabling parallel processing."),
-                new Topic("Multithreading & Concurrency", "Concurrency", "Advanced", 5,
-                         "Essential for building scalable applications that can handle multiple operations simultaneously."),
-                new Topic("JVM Internals", "Performance", "Advanced", 5,
-                         "Deep understanding of Java Virtual Machine for performance optimization and troubleshooting."),
-                new Topic("Spring Framework", "Frameworks", "Advanced", 5,
-                         "Industry-standard framework for building enterprise Java applications with dependency injection."),
-                new Topic("Microservices Architecture", "Architecture", "Advanced", 4,
-                         "Modern approach to building distributed systems with independent, scalable services."),
-                new Topic("Design Patterns", "Best Practices", "Intermediate", 4,
-                         "Proven solutions to common programming problems that improve code maintainability and reusability."),
-                new Topic("Unit Testing & TDD", "Testing", "Intermediate", 4,
-                         "Essential practices for ensuring code quality and reliability through systematic testing approaches.")
+                         "Core framework for data structures like List, Set, and Map; understanding performance trade-offs is crucial for writing efficient code.")
         );
 
         return defaultTopics.stream().limit(limit).toList();

@@ -91,7 +91,7 @@ public class TopicProcessingService {
     }
 
     private void processTopics(List<Topic> topics) {
-        log.info("Processing {} topics", topics.size());
+        log.info("Processing topics: {}", topics.stream().map(Topic::getName).toList());
 
         try {
             // Mark topics as processing
@@ -187,7 +187,7 @@ public class TopicProcessingService {
             topic.setStatus(TopicStatus.PROCESSING);
             topicRepository.save(topic);
         }
-        log.info("Marked {} topics as processing", topics.size());
+        log.info("Marked topics as processing: {}", topics.stream().map(Topic::getName).toList());
     }
 
     private void markTopicsAsCompleted(List<Topic> topics) {

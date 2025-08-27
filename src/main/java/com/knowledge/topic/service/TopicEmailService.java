@@ -15,6 +15,7 @@ import jakarta.mail.internet.MimeMessage;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -46,8 +47,20 @@ public class TopicEmailService {
         }
 
         try {
-            String subject = EmailType.OVERVIEW.getSubject() + " - " +
-                           LocalDateTime.now().format(EMAIL_DATE_FORMATTER);
+            // Create subject with topic names
+            String topicNames = overviews.stream()
+                    .map(overview -> overview.getTopicName())
+                    .collect(Collectors.joining(", "));
+            
+            String subject;
+            if (overviews.size() == 1) {
+                subject = "📋 Daily Overview: " + topicNames + " - " + 
+                         LocalDateTime.now().format(EMAIL_DATE_FORMATTER);
+            } else {
+                subject = "📋 Daily Overview: " + overviews.size() + " Topics - " + 
+                         LocalDateTime.now().format(EMAIL_DATE_FORMATTER);
+            }
+            
             String htmlContent = buildOverviewEmailContent(overviews);
 
             sendEmail(subject, htmlContent);
@@ -67,8 +80,20 @@ public class TopicEmailService {
         }
 
         try {
-            String subject = EmailType.DETAILED.getSubject() + " - " +
-                           LocalDateTime.now().format(EMAIL_DATE_FORMATTER);
+            // Create subject with topic names
+            String topicNames = details.stream()
+                    .map(detail -> detail.getTopicName())
+                    .collect(Collectors.joining(", "));
+            
+            String subject;
+            if (details.size() == 1) {
+                subject = "🔬 Deep Dive: " + topicNames + " - " + 
+                         LocalDateTime.now().format(EMAIL_DATE_FORMATTER);
+            } else {
+                subject = "🔬 Deep Dive: " + details.size() + " Topics - " + 
+                         LocalDateTime.now().format(EMAIL_DATE_FORMATTER);
+            }
+            
             String htmlContent = buildDetailedEmailContent(details);
 
             sendEmail(subject, htmlContent);
@@ -91,14 +116,21 @@ public class TopicEmailService {
 
         // Try to send overview email
         try {
-            sendOverviewEmail(overviews);
-            overviewSent = true;
+            if (overviews != null && !overviews.isEmpty()) {
+                log.info("Sending overview email for topics: {}", overviews.stream().map(TopicOverview::getTopicName).toList());
+                sendOverviewEmail(overviews);
+                overviewSent = true;
+            } else {
+                log.info("No overview content to send via email");
+            }
         } catch (Exception e) {
             log.warn("Failed to send overview email, continuing: {}", e.getMessage());
         }
 
         // Try to send detailed email
         try {
+            log.info("Sending detailed email for topics: {}", details.stream().map(TopicDetail::getTopicName).toList());
+            log.info("Sending detailed email for topics: {}", details);
             sendDetailedEmail(details);
             detailedSent = true;
         } catch (Exception e) {
@@ -361,8 +393,8 @@ public class TopicEmailService {
                     </div>
                     """,
                     overview.getTopicName(),
-                    overview.getCategory().toLowerCase().replace(" ", "-"),
-                    "Intermediate", // Could be from topic.getTopicLevel() if available
+                    "intermediate", // Default level - could be enhanced to read from topic data
+                    "Intermediate", // Display level
                     overview.getCategory(),
                     overview.getWordCount(),
                     formatTextForHtml(parsed.getIntroduction()),
@@ -431,24 +463,101 @@ public class TopicEmailService {
                             border-radius: 8px;
                             box-shadow: 0 3px 6px rgba(0,0,0,0.1);
                         }
-                        .historical-context { 
-                            background: #fff3cd; 
-                            border-left: 4px solid #ffc107;
+                        .overview-section { 
+                            background: #f8f9fa; 
+                            border-left: 4px solid #007bff;
                         }
-                        .case-study { 
-                            background: #d1ecf1; 
-                            border-left: 4px solid #17a2b8;
+                        .concepts-section { 
+                            background: #e3f2fd; 
+                            border-left: 4px solid #2196f3;
                         }
-                        .expert-insight { 
-                            font-style: italic; 
-                            background: #e2e3e5; 
-                            padding: 20px; 
-                            border-left: 4px solid #6c757d; 
-                            margin: 20px 0;
+                        .code-examples-section { 
+                            background: #f3e5f5; 
+                            border-left: 4px solid #9c27b0;
                         }
-                        .further-reading { 
-                            background: #d4edda; 
-                            border-left: 4px solid #28a745;
+                        .comparisons-section { 
+                            background: #fff3e0; 
+                            border-left: 4px solid #ff9800;
+                        }
+                        .best-practices-section { 
+                            background: #e8f5e8; 
+                            border-left: 4px solid #4caf50;
+                        }
+                        .advanced-section { 
+                            background: #ffebee; 
+                            border-left: 4px solid #f44336;
+                        }
+                        .related-topics-section { 
+                            background: #e1f5fe; 
+                            border-left: 4px solid #00bcd4;
+                        }
+                        .resources-section { 
+                            background: #f1f8e9; 
+                            border-left: 4px solid #8bc34a;
+                        }
+                        .examples-grid {
+                            display: grid;
+                            gap: 20px;
+                            margin-top: 15px;
+                        }
+                        .code-example {
+                            background: #1e1e1e;
+                            color: #d4d4d4;
+                            padding: 20px;
+                            border-radius: 8px;
+                            margin: 15px 0;
+                            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+                        }
+                        .code-example h4 {
+                            color: #569cd6;
+                            margin: 0 0 15px 0;
+                            font-size: 1.1em;
+                        }
+                        .code-example pre {
+                            margin: 0;
+                            overflow-x: auto;
+                            background: transparent;
+                            border: none;
+                            padding: 0;
+                        }
+                        .code-example code {
+                            background: transparent;
+                            color: inherit;
+                            font-size: 0.9em;
+                            line-height: 1.5;
+                        }
+                        .explanation {
+                            background: #2d2d30;
+                            color: #cccccc;
+                            padding: 10px;
+                            margin-top: 10px;
+                            border-radius: 4px;
+                            font-size: 0.9em;
+                            border-left: 3px solid #007acc;
+                        }
+                        .concept-item {
+                            background: white;
+                            padding: 15px;
+                            margin: 10px 0;
+                            border-radius: 6px;
+                            border-left: 3px solid #17a2b8;
+                        }
+                        .comparison-item {
+                            background: white;
+                            padding: 15px;
+                            margin: 10px 0;
+                            border-radius: 6px;
+                            border: 1px solid #e9ecef;
+                        }
+                        pre.language-java {
+                            background: #1e1e1e;
+                            color: #d4d4d4;
+                            padding: 15px;
+                            border-radius: 6px;
+                            overflow-x: auto;
+                            margin: 10px 0;
+                            font-size: 0.9em;
+                            line-height: 1.4;
                         }
                         .section-title {
                             color: #2c3e50;
@@ -482,41 +591,53 @@ public class TopicEmailService {
                 """.formatted(currentDate, currentDate, details.size()));
 
         for (TopicDetail detail : details) {
+            // Parse the AI-generated content using the content parser service
+            ContentParserService.ParsedDetail parsed = contentParser.parseDetailedContent(detail.getComprehensiveIntroduction());
+            
             html.append(String.format("""
                     <div class="detail-section">
                         <div class="topic-header">
-                            <h2>%s - Comprehensive Analysis</h2>
+                            <h2>%s - Comprehensive Programming Guide</h2>
                             <p><strong>Category:</strong> %s | <strong>Word Count:</strong> %d words</p>
                         </div>
                         
-                        <div class="historical-context">
-                            <h3 class="section-title">📜 Historical Context</h3>
+                        <div class="overview-section">
+                            <h3 class="section-title">� Overview & Fundamentals</h3>
                             %s
                         </div>
                         
-                        <h3 class="section-title">🔧 Core Mechanisms & Principles</h3>
-                        %s
-                        
-                        <div class="case-study">
-                            <h3 class="section-title">📊 Real-World Applications & Case Studies</h3>
-                            <ul>%s</ul>
-                            <p><strong>Case Studies:</strong></p>
-                            <ul>%s</ul>
-                        </div>
-                        
-                        <h3 class="section-title">🌐 Related Concepts & Connections</h3>
-                        %s
-                        
-                        <div class="expert-insight">
-                            <h3 class="section-title">💭 Expert Insights</h3>
+                        <div class="concepts-section">
+                            <h3 class="section-title">🔧 Key Concepts & Components</h3>
                             %s
                         </div>
                         
-                        <h3 class="section-title">🔮 Future Outlook & Trends</h3>
-                        %s
+                        <div class="code-examples-section">
+                            <h3 class="section-title">� Code Examples & Practical Implementation</h3>
+                            <div class="examples-grid">%s</div>
+                        </div>
                         
-                        <div class="further-reading">
-                            <h3 class="section-title">📖 Further Learning Resources</h3>
+                        <div class="comparisons-section">
+                            <h3 class="section-title">⚖️ Comparisons & Alternatives</h3>
+                            %s
+                        </div>
+                        
+                        <div class="best-practices-section">
+                            <h3 class="section-title">✅ Best Practices & Tips</h3>
+                            %s
+                        </div>
+                        
+                        <div class="advanced-section">
+                            <h3 class="section-title">� Advanced Techniques & Case Studies</h3>
+                            <ul>%s</ul>
+                        </div>
+                        
+                        <div class="related-topics-section">
+                            <h3 class="section-title">� Related Topics for Further Learning</h3>
+                            %s
+                        </div>
+                        
+                        <div class="resources-section">
+                            <h3 class="section-title">📖 Learning Resources & References</h3>
                             <ul>%s</ul>
                         </div>
                     </div>
@@ -524,19 +645,23 @@ public class TopicEmailService {
                     detail.getTopicName(),
                     detail.getCategory(),
                     detail.getWordCount(),
-                    formatTextForHtml(detail.getHistoricalContext()),
-                    formatTextForHtml(detail.getCoreMechanisms()),
-                    detail.getRealWorldApplications().stream()
-                            .map(app -> "<li>" + formatTextForHtml(app) + "</li>")
+                    formatTextForHtml(parsed.getExecutiveSummary()),
+                    formatTextForHtml(parsed.getCorePrinciples()),
+                    parsed.getRealWorldApplications().stream()
+                            .map(app -> "<div class='code-example'><h4>" + formatTextForHtml(app.getTitle()) + "</h4>" + 
+                                       app.getDescription() + "<div class='explanation'>" + formatTextForHtml(app.getImpact()) + "</div></div>")
                             .reduce("", String::concat),
-                    detail.getCaseStudies().stream()
-                            .map(study -> "<li>" + formatTextForHtml(study) + "</li>")
+                    formatTextForHtml(parsed.getFutureOutlook()),
+                    formatTextForHtml(parsed.getCurrentInnovation()),
+                    parsed.getCaseStudies().stream()
+                            .map(study -> "<li><strong>" + formatTextForHtml(study.getCompany()) + ":</strong> " + 
+                                         formatTextForHtml(study.getChallenge()) + " → " + formatTextForHtml(study.getSolution()) + 
+                                         " <em>Results: " + formatTextForHtml(study.getResults()) + "</em></li>")
                             .reduce("", String::concat),
-                    formatTextForHtml(detail.getRelatedConcepts()),
-                    formatTextForHtml(detail.getExpertInsights()),
-                    formatTextForHtml(detail.getFutureOutlook()),
-                    detail.getFurtherLearningResources().stream()
-                            .map(resource -> "<li>" + formatTextForHtml(resource) + "</li>")
+                    formatTextForHtml(parsed.getInterconnectedConcepts()),
+                    parsed.getLearningResources().stream()
+                            .map(resource -> "<li><strong>" + formatTextForHtml(resource.getType()) + ":</strong> " + 
+                                            formatTextForHtml(resource.getTitle()) + " - " + formatTextForHtml(resource.getRelevance()) + "</li>")
                             .reduce("", String::concat)));
         }
 
@@ -553,11 +678,48 @@ public class TopicEmailService {
     }
 
     private String formatTextForHtml(String text) {
-        if (text == null) return "";
-        return text.replace("\n", "<br>")
+        if (text == null || text.trim().isEmpty()) {
+            return "";
+        }
+        
+        // Clean up the text and convert to proper HTML
+        String formatted = text.trim()
+                  // First escape HTML entities
                   .replace("&", "&amp;")
                   .replace("<", "&lt;")
                   .replace(">", "&gt;")
-                  .replace("\"", "&quot;");
+                  .replace("\"", "&quot;")
+                  
+                  // Convert **bold** to <strong>bold</strong>
+                  .replaceAll("\\*\\*(.*?)\\*\\*", "<strong>$1</strong>")
+                  
+                  // Convert markdown-style lists to HTML
+                  .replaceAll("(?m)^- (.+)$", "<li>$1</li>")
+                  .replaceAll("(?m)^\\* (.+)$", "<li>$1</li>")
+                  
+                  // Convert double newlines to paragraph breaks
+                  .replace("\n\n", "</p><p>")
+                  
+                  // Convert single newlines to breaks
+                  .replace("\n", "<br>");
+        
+        // Wrap in paragraph tags if not already wrapped and doesn't contain list items
+        if (!formatted.contains("<li>") && !formatted.startsWith("<p>")) {
+            formatted = "<p>" + formatted + "</p>";
+        }
+        
+        // Clean up empty paragraphs and formatting issues
+        formatted = formatted
+                  .replace("<p></p>", "")
+                  .replace("<p><br>", "<p>")
+                  .replace("<br></p>", "</p>")
+                  .replace("<li></li>", "");
+        
+        // Wrap consecutive list items in ul tags
+        if (formatted.contains("<li>")) {
+            formatted = formatted.replaceAll("(<li>.*?</li>)+", "<ul>$0</ul>");
+        }
+        
+        return formatted;
     }
 }

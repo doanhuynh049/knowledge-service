@@ -30,12 +30,12 @@ public class ContentGenerationService {
         try {
             // Generate overview content
             log.info("Generating overview content for: {}", topic.getName());
-            String overviewContent = geminiClient.generateOverviewContent(topic);
-
+            // String overviewContent = geminiClient.generateOverviewContent(topic);
+            String overviewContent = "";
             // Generate detailed content
             log.info("Generating detailed content for: {}", topic.getName());
             String detailedContent = geminiClient.generateDetailedContent(topic);
-
+            log.info("Detailed content generated: {}", detailedContent);
             // Create knowledge content entity
             KnowledgeContent content = new KnowledgeContent(topic, overviewContent, detailedContent);
 
