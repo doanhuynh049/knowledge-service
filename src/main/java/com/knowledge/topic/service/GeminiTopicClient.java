@@ -76,47 +76,143 @@ public class GeminiTopicClient {
 
     private String buildOverviewPrompt(Topic topic) {
         return String.format("""
-                Generate a comprehensive but concise overview for the topic: "%s"
-                Category: %s
+                Generate a comprehensive overview for the topic: "%s" (Category: %s)
                 
-                Please provide:
-                1. Introduction (2-3 paragraphs explaining what this topic is and why it matters)
-                2. Key Concepts (3-5 main concepts that define this topic)
-                3. Current Relevance (how this topic applies in today's world)
-                4. Main Takeaways (3-5 bullet points summarizing the most important points)
-                5. Why It Matters (practical importance and real-world impact)
+                **IMPORTANT: Structure your response in the following JSON-like format for easy parsing:**
                 
-                Format: Professional, engaging, suitable for busy professionals
-                Length: 300-500 words
-                Tone: Educational but accessible
+                {
+                  "introduction": "2-3 paragraph introduction with clear definition, importance, and recent developments",
+                  "keyConcepts": [
+                    "Core principle 1 with brief explanation",
+                    "Core principle 2 with brief explanation", 
+                    "Core principle 3 with brief explanation",
+                    "Core principle 4 with brief explanation"
+                  ],
+                  "currentRelevance": "1-2 paragraphs on modern impact, trends, and applications",
+                  "mainTakeaways": [
+                    "Actionable insight 1 with practical value",
+                    "Actionable insight 2 with key facts",
+                    "Actionable insight 3 with decision-making guidance",
+                    "Actionable insight 4 with professional relevance"
+                  ],
+                  "whyItMatters": "1 paragraph on practical importance, career relevance, and future opportunities",
+                  "quickStats": [
+                    "Relevant statistic or metric 1",
+                    "Industry growth/adoption figure",
+                    "Market size or impact measure"
+                  ]
+                }
                 
-                Focus on clarity and practical understanding rather than technical jargon.
+                **Content Guidelines:**
+                - Total length: 400-600 words
+                - Include specific examples and real companies where relevant
+                - Use current data and trends (2024-2025)
+                - Make it immediately actionable for professionals
+                - Focus on practical applications and career benefits
+                - Keep language engaging but professional
+                
+                **Format the final output as valid JSON that can be easily parsed.**
                 """, topic.getName(), topic.getCategory());
     }
 
     private String buildDetailedPrompt(Topic topic) {
         return String.format("""
-                Generate comprehensive detailed knowledge content for the topic: "%s"
-                Category: %s
+                Create comprehensive expert-level content for: "%s" (Category: %s)
                 
-                Please provide an in-depth exploration covering:
-                1. Comprehensive Introduction (2 paragraphs with context and significance)
-                2. Historical Context (evolution and development over time)
-                3. Core Mechanisms/Principles (how it works, underlying theories)
-                4. Technical Details (specific processes, methodologies, or systems)
-                5. Real-World Applications (3-5 concrete examples with explanations)
-                6. Case Studies (1-2 detailed examples of implementation/impact)
-                7. Related Concepts (interconnections with other topics)
-                8. Current Trends (recent developments and innovations)
-                9. Future Outlook (predictions and emerging directions)
-                10. Expert Insights (notable quotes or perspectives from thought leaders)
-                11. Further Learning (3-5 recommended resources for deeper study)
+                **IMPORTANT: Structure your response in the following JSON format for easy parsing:**
                 
-                Format: Academic yet accessible, suitable for serious learners
-                Length: 1000-1500 words
-                Tone: Authoritative, comprehensive, engaging
-                Include relevant statistics, dates, and specific examples where applicable.
-                Ensure each section flows naturally into the next.
+                {
+                  "executiveSummary": "2 paragraphs covering strategic importance and overview",
+                  "historicalEvolution": "2-3 paragraphs on key milestones and paradigm shifts",
+                  "corePrinciples": "3-4 paragraphs on fundamental theories and technical details",
+                  "realWorldApplications": [
+                    {
+                      "title": "Application 1 Title",
+                      "description": "Detailed description with company/industry example",
+                      "impact": "Quantifiable results or benefits"
+                    },
+                    {
+                      "title": "Application 2 Title", 
+                      "description": "Detailed description with specific implementation",
+                      "impact": "Success metrics and outcomes"
+                    },
+                    {
+                      "title": "Application 3 Title",
+                      "description": "Innovation use case with real example", 
+                      "impact": "Business value and transformation"
+                    }
+                  ],
+                  "caseStudies": [
+                    {
+                      "company": "Real Company/Organization Name",
+                      "challenge": "Specific problem they faced",
+                      "solution": "How they applied this topic",
+                      "results": "Quantified outcomes and lessons learned"
+                    },
+                    {
+                      "company": "Another Real Example",
+                      "challenge": "Different challenge scenario",
+                      "solution": "Implementation approach used",
+                      "results": "Measurable impact and best practices"
+                    }
+                  ],
+                  "interconnectedConcepts": "2 paragraphs on related fields and cross-disciplinary connections",
+                  "currentInnovation": "2-3 paragraphs on latest research, tools, and industry disruptions",
+                  "futureOutlook": "2 paragraphs on 5-10 year predictions and strategic implications",
+                  "expertInsights": [
+                    {
+                      "expert": "Industry Leader Name/Title",
+                      "insight": "Notable quote or perspective on the topic"
+                    },
+                    {
+                      "expert": "Research Authority/Institution", 
+                      "insight": "Key research finding or contrasting viewpoint"
+                    }
+                  ],
+                  "learningResources": [
+                    {
+                      "type": "Academic Journal",
+                      "title": "Specific journal or paper title",
+                      "relevance": "Why this resource is valuable"
+                    },
+                    {
+                      "type": "Professional Course",
+                      "title": "Certification or training program",
+                      "relevance": "Skills and credentials gained"
+                    },
+                    {
+                      "type": "Industry Report",
+                      "title": "Research report or whitepaper",
+                      "relevance": "Market insights and trends"
+                    },
+                    {
+                      "type": "Conference/Community",
+                      "title": "Key event or professional network",
+                      "relevance": "Networking and knowledge sharing opportunities"
+                    },
+                    {
+                      "type": "Essential Reading",
+                      "title": "Book by recognized expert",
+                      "relevance": "Foundational knowledge and advanced concepts"
+                    }
+                  ],
+                  "keyMetrics": [
+                    "Market size: $X billion industry",
+                    "Growth rate: X% annually", 
+                    "Job market: X positions available",
+                    "Salary impact: X% premium for expertise"
+                  ]
+                }
+                
+                **Content Requirements:**
+                - Total length: 1200-1800 words
+                - Include real companies, products, and specific implementations
+                - Use current data and statistics (2024-2025)
+                - Reference authoritative sources and research
+                - Balance theoretical depth with practical applications
+                - Provide actionable insights for different professional levels
+                
+                **Format the final output as valid JSON that can be easily parsed and converted to HTML.**
                 """, topic.getName(), topic.getCategory());
     }
 

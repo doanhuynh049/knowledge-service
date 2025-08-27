@@ -21,6 +21,8 @@ import java.util.List;
 public class TopicEmailService {
 
     private final JavaMailSender mailSender;
+    private final ContentParserService contentParser; // NEW: Add parser service
+
     private final String fromEmail;
     private final String toEmail;
 
@@ -28,9 +30,11 @@ public class TopicEmailService {
     private static final DateTimeFormatter EMAIL_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     public TopicEmailService(JavaMailSender mailSender,
+                           ContentParserService contentParser,
                            @Value("${app.mail-from}") String fromEmail,
                            @Value("${app.mail-to}") String toEmail) {
         this.mailSender = mailSender;
+        this.contentParser = contentParser;
         this.fromEmail = fromEmail;
         this.toEmail = toEmail;
     }
@@ -142,101 +146,252 @@ public class TopicEmailService {
                         body { 
                             font-family: 'Segoe UI', Tahoma, sans-serif; 
                             line-height: 1.6; 
-                            color: #333; 
-                            max-width: 800px; 
+                            color: #2c3e50; 
+                            max-width: 900px; 
                             margin: 0 auto; 
                             padding: 20px; 
+                            background-color: #f8f9fa;
+                        }
+                        .email-container {
+                            background: white;
+                            border-radius: 12px;
+                            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+                            overflow: hidden;
                         }
                         .header { 
                             background: linear-gradient(135deg, #667eea 0%%, #764ba2 100%%); 
                             color: white; 
-                            padding: 30px; 
-                            border-radius: 8px; 
-                            margin-bottom: 30px; 
+                            padding: 40px; 
                             text-align: center; 
                         }
-                        .overview-card { 
-                            background: #f8f9fa; 
-                            padding: 25px; 
-                            margin: 20px 0; 
-                            border-left: 4px solid #007bff; 
+                        .header h1 { margin: 0; font-size: 2.2em; font-weight: 300; }
+                        .header p { margin: 10px 0 0 0; opacity: 0.9; }
+                        
+                        .topic-card { 
+                            background: #ffffff; 
+                            margin: 25px 30px; 
+                            border-left: 5px solid #667eea; 
                             border-radius: 8px;
-                            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+                            overflow: hidden;
                         }
-                        .takeaways { 
-                            background: #e8f4fd; 
-                            padding: 20px; 
-                            border-radius: 6px;
-                            margin: 15px 0;
+                        .topic-header {
+                            background: linear-gradient(135deg, #f8f9fa 0%%, #e9ecef 100%%);
+                            padding: 25px;
+                            border-bottom: 1px solid #dee2e6;
                         }
-                        .category-badge { 
+                        .topic-title { 
+                            color: #2c3e50; 
+                            margin: 0 0 10px 0; 
+                            font-size: 1.8em;
+                            font-weight: 600;
+                        }
+                        .topic-meta {
+                            display: flex;
+                            gap: 15px;
+                            align-items: center;
+                            flex-wrap: wrap;
+                        }
+                        .level-badge { 
                             background: #28a745; 
                             color: white; 
-                            padding: 6px 12px; 
-                            border-radius: 15px; 
+                            padding: 6px 14px; 
+                            border-radius: 20px; 
                             font-size: 0.85em;
-                            font-weight: bold;
+                            font-weight: 600;
+                            text-transform: uppercase;
                         }
-                        .topic-title {
-                            color: #2c3e50;
-                            margin-bottom: 15px;
-                            border-bottom: 2px solid #ecf0f1;
-                            padding-bottom: 10px;
+                        .level-advanced { background: #dc3545; }
+                        .level-intermediate { background: #ffc107; color: #212529; }
+                        .level-beginner { background: #28a745; }
+                        
+                        .category-badge { 
+                            background: #6f42c1; 
+                            color: white; 
+                            padding: 6px 14px; 
+                            border-radius: 20px; 
+                            font-size: 0.85em;
+                            font-weight: 500;
                         }
-                        .introduction {
-                            margin: 15px 0;
-                            color: #2c3e50;
+                        
+                        .topic-content { padding: 30px; }
+                        .introduction { 
+                            font-size: 1.1em; 
+                            line-height: 1.7; 
+                            color: #2c3e50; 
+                            margin-bottom: 25px;
+                            text-align: justify;
                         }
-                        .footer {
-                            background: #f1f3f4;
+                        
+                        .concepts-section, .takeaways-section, .stats-section {
+                            background: #f8f9fa;
                             padding: 20px;
-                            border-radius: 6px;
-                            margin-top: 30px;
-                            text-align: center;
-                            color: #666;
+                            border-radius: 8px;
+                            margin: 20px 0;
+                            border-left: 4px solid #667eea;
                         }
-                        ul { padding-left: 20px; }
-                        li { margin: 8px 0; }
+                        .concepts-section { border-left-color: #17a2b8; }
+                        .takeaways-section { border-left-color: #28a745; }
+                        .stats-section { border-left-color: #ffc107; }
+                        
+                        .section-title {
+                            font-size: 1.2em;
+                            font-weight: 600;
+                            color: #2c3e50;
+                            margin: 0 0 15px 0;
+                            display: flex;
+                            align-items: center;
+                            gap: 8px;
+                        }
+                        
+                        .concept-list, .takeaway-list, .stats-list { 
+                            list-style: none; 
+                            padding: 0; 
+                            margin: 0;
+                        }
+                        .concept-list li, .takeaway-list li, .stats-list li { 
+                            padding: 8px 0; 
+                            border-bottom: 1px solid #e9ecef;
+                            position: relative;
+                            padding-left: 20px;
+                        }
+                        .concept-list li:before {
+                            content: "💡";
+                            position: absolute;
+                            left: 0;
+                        }
+                        .takeaway-list li:before {
+                            content: "✅";
+                            position: absolute;
+                            left: 0;
+                        }
+                        .stats-list li:before {
+                            content: "📊";
+                            position: absolute;
+                            left: 0;
+                        }
+                        .concept-list li:last-child, .takeaway-list li:last-child, .stats-list li:last-child { 
+                            border-bottom: none; 
+                        }
+                        
+                        .why-matters {
+                            background: linear-gradient(135deg, #e3f2fd 0%%, #bbdefb 100%%);
+                            padding: 25px;
+                            border-radius: 8px;
+                            margin: 20px 0;
+                            border-left: 4px solid #2196f3;
+                        }
+                        .why-matters .icon { font-size: 1.5em; margin-right: 10px; }
+                        
+                        .relevance-section {
+                            margin: 20px 0;
+                            padding: 20px;
+                            background: #fff3cd;
+                            border-radius: 8px;
+                            border-left: 4px solid #ffc107;
+                        }
+                        
+                        .footer {
+                            background: linear-gradient(135deg, #2c3e50 0%%, #34495e 100%%);
+                            color: white;
+                            padding: 30px;
+                            text-align: center;
+                        }
+                        .footer a { color: #74b9ff; text-decoration: none; }
+                        .footer a:hover { text-decoration: underline; }
+                        
+                        @media (max-width: 600px) {
+                            .topic-card { margin: 15px; }
+                            .topic-content { padding: 20px; }
+                            .topic-meta { flex-direction: column; align-items: flex-start; }
+                        }
                     </style>
                 </head>
                 <body>
-                    <div class="header">
-                        <h1>📋 Daily Topic Overview</h1>
-                        <p><strong>Date:</strong> %s | <strong>Topics:</strong> %d</p>
-                    </div>
+                    <div class="email-container">
+                        <div class="header">
+                            <h1>📋 Daily Topic Overview</h1>
+                            <p><strong>Date:</strong> %s | <strong>Topics:</strong> %d</p>
+                        </div>
                 """.formatted(currentDate, currentDate, overviews.size()));
 
         for (TopicOverview overview : overviews) {
+            // Parse the AI-generated content
+            ContentParserService.ParsedOverview parsed = contentParser.parseOverviewContent(overview.getIntroduction());
+
             html.append(String.format("""
-                    <div class="overview-card">
-                        <h2 class="topic-title">%s <span class="category-badge">%s</span></h2>
-                        <div class="introduction">%s</div>
-                        <div class="takeaways">
-                            <h4>🎯 Key Takeaways:</h4>
-                            <ul>%s</ul>
+                    <div class="topic-card">
+                        <div class="topic-header">
+                            <h2 class="topic-title">%s</h2>
+                            <div class="topic-meta">
+                                <span class="level-badge level-%s">%s Level</span>
+                                <span class="category-badge">%s</span>
+                                <small>📊 %d words</small>
+                            </div>
                         </div>
-                        <p><em>💡 <strong>Why it matters:</strong> %s</em></p>
-                        <small>📊 Word count: %d words</small>
+                        
+                        <div class="topic-content">
+                            <div class="introduction">%s</div>
+                            
+                            <div class="concepts-section">
+                                <h4 class="section-title">💡 Key Concepts</h4>
+                                <ul class="concept-list">%s</ul>
+                            </div>
+                            
+                            <div class="relevance-section">
+                                <h4 class="section-title">🌟 Current Relevance</h4>
+                                <p>%s</p>
+                            </div>
+                            
+                            <div class="takeaways-section">
+                                <h4 class="section-title">🎯 Main Takeaways</h4>
+                                <ul class="takeaway-list">%s</ul>
+                            </div>
+                            
+                            <div class="stats-section">
+                                <h4 class="section-title">📊 Quick Stats</h4>
+                                <ul class="stats-list">%s</ul>
+                            </div>
+                            
+                            <div class="why-matters">
+                                <h4 class="section-title"><span class="icon">💼</span>Why It Matters</h4>
+                                <p>%s</p>
+                            </div>
+                        </div>
                     </div>
                     """,
                     overview.getTopicName(),
+                    overview.getCategory().toLowerCase().replace(" ", "-"),
+                    "Intermediate", // Could be from topic.getTopicLevel() if available
                     overview.getCategory(),
-                    formatTextForHtml(overview.getIntroduction()),
-                    overview.getMainTakeaways().stream()
+                    overview.getWordCount(),
+                    formatTextForHtml(parsed.getIntroduction()),
+                    parsed.getKeyConcepts().stream()
+                            .map(concept -> "<li>" + formatTextForHtml(concept) + "</li>")
+                            .reduce("", String::concat),
+                    formatTextForHtml(parsed.getCurrentRelevance()),
+                    parsed.getMainTakeaways().stream()
                             .map(takeaway -> "<li>" + formatTextForHtml(takeaway) + "</li>")
                             .reduce("", String::concat),
-                    formatTextForHtml(overview.getWhyItMatters()),
-                    overview.getWordCount()));
+                    parsed.getQuickStats().stream()
+                            .map(stat -> "<li>" + formatTextForHtml(stat) + "</li>")
+                            .reduce("", String::concat),
+                    formatTextForHtml(parsed.getWhyItMatters())));
         }
 
         html.append(String.format("""
-                    <div class="footer">
-                        <p>📚 <strong>Want deeper knowledge?</strong> Check your detailed knowledge email for comprehensive insights!</p>
-                        <p>Generated by Topic Knowledge Service • %s</p>
+                        <div class="footer">
+                            <h3>🚀 Ready for Deep Dive?</h3>
+                            <p>Check your <strong>detailed knowledge email</strong> for comprehensive insights, case studies, and expert perspectives!</p>
+                            <p style="margin-top: 20px; font-size: 0.9em; opacity: 0.8;">
+                                Generated by Topic Knowledge Service • %s<br>
+                                <a href="mailto:%s">Questions or feedback?</a>
+                            </p>
+                        </div>
                     </div>
                 </body>
                 </html>
-                """, timestamp));
+                """, timestamp, fromEmail));
 
         return html.toString();
     }

@@ -23,6 +23,9 @@ public class Topic {
     @Column(nullable = false)
     private String category;
 
+    @Column(name = "topic_level")
+    private String topicLevel; // NEW: Intermediate, Advanced, Beginner
+
     @Column(nullable = false)
     private int priority;
 
@@ -56,6 +59,16 @@ public class Topic {
     public Topic(String name, String category, int priority, String description) {
         this.name = name;
         this.category = category;
+        this.priority = priority;
+        this.description = description;
+        this.status = TopicStatus.NEW;
+        this.topicLevel = "Intermediate"; // default
+    }
+
+    public Topic(String name, String category, String topicLevel, int priority, String description) {
+        this.name = name;
+        this.category = category;
+        this.topicLevel = topicLevel;
         this.priority = priority;
         this.description = description;
         this.status = TopicStatus.NEW;

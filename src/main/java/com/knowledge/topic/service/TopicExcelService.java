@@ -221,10 +221,10 @@ public class TopicExcelService {
 
     private Topic parseTopicFromRow(Row row) {
         try {
-            String name = getCellValueAsString(row.getCell(0));
-            String category = getCellValueAsString(row.getCell(1));
-            int priority = (int) getCellValueAsNumber(row.getCell(2));
-            String lastProcessedStr = getCellValueAsString(row.getCell(3));
+            String topicLevel = getCellValueAsString(row.getCell(0)); // NEW: Topic Level
+            String name = getCellValueAsString(row.getCell(1));
+            String category = getCellValueAsString(row.getCell(2));
+            int priority = (int) getCellValueAsNumber(row.getCell(3));
             String statusStr = getCellValueAsString(row.getCell(4));
             String description = getCellValueAsString(row.getCell(5));
 
@@ -233,19 +233,14 @@ public class TopicExcelService {
             }
 
             Topic topic = new Topic(name.trim(), category != null ? category.trim() : "General",
+                                  topicLevel != null ? topicLevel.trim() : "Intermediate",
                                   priority > 0 ? priority : 3, description);
-
-            if (lastProcessedStr != null && !lastProcessedStr.trim().isEmpty()) {
-                try {
-                    topic.setLastProcessed(LocalDateTime.parse(lastProcessedStr, DATE_FORMATTER));
-                } catch (Exception e) {
-                    log.warn("Could not parse last processed date: {}", lastProcessedStr);
-                }
-            }
 
             if (statusStr != null && !statusStr.trim().isEmpty()) {
                 try {
-                    topic.setStatus(TopicStatus.valueOf(statusStr.trim().toUpperCase()));
+                    // Map Excel statuses to our enum
+                    String mappedStatus = mapExcelStatusToEnum(statusStr.trim());
+                    topic.setStatus(TopicStatus.valueOf(mappedStatus));
                 } catch (IllegalArgumentException e) {
                     log.warn("Unknown topic status: {}, defaulting to NEW", statusStr);
                     topic.setStatus(TopicStatus.NEW);
@@ -260,25 +255,23 @@ public class TopicExcelService {
         }
     }
 
-    private void updateTopicInSheet(Sheet sheet, Topic topic, LocalDateTime processedTime) {
-        for (Row row : sheet) {
-            if (row.getRowNum() == 0) continue; // Skip header
-
-            String topicName = getCellValueAsString(row.getCell(0));
-            if (topic.getName().equals(topicName)) {
-                row.getCell(3).setCellValue(processedTime.format(DATE_FORMATTER));
-                row.getCell(4).setCellValue(TopicStatus.DONE.toString());
-                break;
-            }
-        }
+    private String mapExcelStatusToEnum(String excelStatus) {
+        return switch (excelStatus.toUpperCase()) {
+            case "OPEN" -> "NEW";
+            case "IN_PROGRESS" -> "PROCESSING";
+            case "COMPLETED", "DONE" -> "DONE";
+            case "CANCELLED", "ARCHIVED" -> "ARCHIVED";
+            case "ERROR", "FAILED" -> "ERROR";
+            default -> "NEW";
+        };
     }
 
     private void createHeaderRow(Sheet sheet) {
         Row headerRow = sheet.createRow(0);
-        headerRow.createCell(0).setCellValue("Topic Name");
-        headerRow.createCell(1).setCellValue("Category");
-        headerRow.createCell(2).setCellValue("Priority");
-        headerRow.createCell(3).setCellValue("Last Processed");
+        headerRow.createCell(0).setCellValue("Topic Level");
+        headerRow.createCell(1).setCellValue("Topic Name");
+        headerRow.createCell(2).setCellValue("Category");
+        headerRow.createCell(3).setCellValue("Priority");
         headerRow.createCell(4).setCellValue("Status");
         headerRow.createCell(5).setCellValue("Description");
     }
@@ -295,11 +288,10 @@ public class TopicExcelService {
     }
 
     private void populateTopicRow(Row row, Topic topic) {
-        row.createCell(0).setCellValue(topic.getName());
-        row.createCell(1).setCellValue(topic.getCategory());
-        row.createCell(2).setCellValue(topic.getPriority());
-        row.createCell(3).setCellValue(topic.getLastProcessed() != null ?
-                                     topic.getLastProcessed().format(DATE_FORMATTER) : "");
+        row.createCell(0).setCellValue(topic.getTopicLevel() != null ? topic.getTopicLevel() : "Intermediate");
+        row.createCell(1).setCellValue(topic.getName());
+        row.createCell(2).setCellValue(topic.getCategory());
+        row.createCell(3).setCellValue(topic.getPriority());
         row.createCell(4).setCellValue(topic.getStatus().toString());
         row.createCell(5).setCellValue(topic.getDescription() != null ? topic.getDescription() : "");
     }
@@ -344,16 +336,26 @@ public class TopicExcelService {
 
     private List<Topic> getDefaultTopics(int limit) {
         List<Topic> defaultTopics = List.of(
-                new Topic("Artificial Intelligence", "Technology", 5, "Modern AI systems and machine learning applications"),
-                new Topic("Climate Change", "Science", 5, "Global warming and environmental impact on society"),
-                new Topic("Blockchain Technology", "Technology", 4, "Distributed ledger technology and cryptocurrencies"),
-                new Topic("Renaissance Art", "History", 3, "Art movement of 14th-17th century Europe"),
-                new Topic("Quantum Computing", "Technology", 5, "Next-generation computing using quantum mechanics"),
-                new Topic("Behavioral Economics", "Business", 4, "Psychology in economic decision making"),
-                new Topic("Space Exploration", "Science", 4, "Human exploration of space and space technology"),
-                new Topic("Digital Marketing", "Business", 3, "Online marketing strategies and techniques"),
-                new Topic("Ancient Philosophy", "Philosophy", 3, "Classical Greek and Roman philosophical thought"),
-                new Topic("Renewable Energy", "Science", 5, "Sustainable energy sources and technologies")
+                new Topic("Java Collections Framework", "Collections & Generics", "Intermediate", 5,
+                         "Core framework for data structures like List, Set, and Map; understanding performance trade-offs is crucial for writing efficient code."),
+                new Topic("Generics and Type Safety", "Collections & Generics", "Intermediate", 5,
+                         "Provides stronger type checks at compile time and reduces runtime errors, enabling reusable and flexible code."),
+                new Topic("Lambda Expressions", "Functional Programming", "Intermediate", 4,
+                         "Functional programming constructs that enable cleaner, more readable code and support for stream processing."),
+                new Topic("Stream API", "Functional Programming", "Intermediate", 4,
+                         "Powerful API for processing collections with functional programming paradigms, enabling parallel processing."),
+                new Topic("Multithreading & Concurrency", "Concurrency", "Advanced", 5,
+                         "Essential for building scalable applications that can handle multiple operations simultaneously."),
+                new Topic("JVM Internals", "Performance", "Advanced", 5,
+                         "Deep understanding of Java Virtual Machine for performance optimization and troubleshooting."),
+                new Topic("Spring Framework", "Frameworks", "Advanced", 5,
+                         "Industry-standard framework for building enterprise Java applications with dependency injection."),
+                new Topic("Microservices Architecture", "Architecture", "Advanced", 4,
+                         "Modern approach to building distributed systems with independent, scalable services."),
+                new Topic("Design Patterns", "Best Practices", "Intermediate", 4,
+                         "Proven solutions to common programming problems that improve code maintainability and reusability."),
+                new Topic("Unit Testing & TDD", "Testing", "Intermediate", 4,
+                         "Essential practices for ensuring code quality and reliability through systematic testing approaches.")
         );
 
         return defaultTopics.stream().limit(limit).toList();

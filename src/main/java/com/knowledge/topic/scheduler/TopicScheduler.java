@@ -19,7 +19,7 @@ public class TopicScheduler {
      * Daily processing at 5:00 AM
      * Cron expression: second minute hour day month weekday
      */
-    @Scheduled(cron = "0 0 5 * * *", zone = "America/New_York")
+    @Scheduled(cron = "0 0 5 * * *", zone = "Asia/Ho_Chi_Minh")
     public void processDailyTopics() {
         log.info("Daily topic processing scheduler triggered at 5:00 AM");
 
