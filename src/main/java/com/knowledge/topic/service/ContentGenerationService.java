@@ -28,16 +28,12 @@ public class ContentGenerationService {
         long startTime = System.currentTimeMillis();
 
         try {
-            // Generate overview content
+            // Generate overview content only
             log.info("Generating overview content for: {}", topic.getName());
-            // String overviewContent = geminiClient.generateOverviewContent(topic);
-            String overviewContent = "";
-            // Generate detailed content
-            log.info("Generating detailed content for: {}", topic.getName());
-            String detailedContent = geminiClient.generateDetailedContent(topic);
-            log.info("Detailed content generated: {}", detailedContent);
-            // Create knowledge content entity
-            KnowledgeContent content = new KnowledgeContent(topic, overviewContent, detailedContent);
+            String overviewContent = geminiClient.generateOverviewContent(topic);
+            
+            // Create knowledge content entity with only overview content
+            KnowledgeContent content = new KnowledgeContent(topic, overviewContent, null);
 
             // Calculate generation time
             long endTime = System.currentTimeMillis();
@@ -46,10 +42,9 @@ public class ContentGenerationService {
             // Save to database
             KnowledgeContent savedContent = contentRepository.save(content);
 
-            log.info("Successfully generated content for topic: {} (Overview: {} words, Detailed: {} words, Time: {}s)",
+            log.info("Successfully generated overview content for topic: {} (Overview: {} words, Time: {}s)",
                     topic.getName(),
                     savedContent.getOverviewWordCount(),
-                    savedContent.getDetailedWordCount(),
                     savedContent.getGenerationTimeSeconds());
 
             return savedContent;

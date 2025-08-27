@@ -1,6 +1,5 @@
 package com.knowledge.topic.service;
 
-import com.knowledge.topic.dto.TopicDetail;
 import com.knowledge.topic.dto.TopicOverview;
 import com.knowledge.topic.model.KnowledgeContent;
 import com.knowledge.topic.model.Topic;
@@ -108,10 +107,9 @@ public class TopicProcessingService {
 
             // Create structured content for emails
             List<TopicOverview> overviews = contentService.createTopicOverviews(topics, generatedContents);
-            List<TopicDetail> details = contentService.createTopicDetails(topics, generatedContents);
 
-            // Send dual emails
-            emailService.sendDualTopicEmails(topics, overviews, details);
+            // Send overview email
+            emailService.sendOverviewEmail(topics, overviews);
 
             // Mark content as email sent
             contentService.markContentAsEmailSent(generatedContents);
@@ -220,7 +218,7 @@ public class TopicProcessingService {
             excelService.logProcessedContent(
                     topic,
                     content.getOverviewContent(),
-                    content.getDetailedContent()
+                    null  // No detailed content
             );
         }
     }
