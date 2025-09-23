@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📈 Stock Knowledge - Day {{DAY}}: {{TOPIC}}</title>
+    <style>
+        /* Reset and base styles */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #2c3e50;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 0;
+            padding: 20px;
+        }
+
+        .email-container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: #ffffff;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            overflow: hidden;
+        }
+
+        /* Header Section */
+        .header {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            padding: 40px 30px;
+            text-align: center;
+            position: relative;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse"><path d="M 10 0 L 0 0 0 10" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="1"/></pattern></defs><rect width="100" height="100" fill="url(%23grid)"/></svg>');
+            opacity: 0.3;
+        }
+
+        .header-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .day-badge {
+            background: rgba(255,255,255,0.2);
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 50px;
+            padding: 12px 24px;
+            display: inline-block;
+            margin-bottom: 15px;
+            font-weight: 600;
+            font-size: 1.1em;
+            backdrop-filter: blur(10px);
+        }
+
+        .main-title {
+            font-size: 2.5em;
+            font-weight: 300;
+            margin: 0 0 10px 0;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .subtitle {
+            font-size: 1.2em;
+            opacity: 0.9;
+            font-weight: 400;
+        }
+
+        /* Learning Info Bar */
+        .learning-info {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            padding: 25px 30px;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            align-items: center;
+        }
+
+        .info-item {
+            text-align: center;
+        }
+
+        .info-label {
+            font-size: 0.9em;
+            color: #6c757d;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+        }
+
+        .info-value {
+            font-size: 1.1em;
+            color: #2c3e50;
+            font-weight: 600;
+        }
+
+        .phase-badge {
+            background: #17a2b8;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 25px;
+            font-size: 0.9em;
+            display: inline-block;
+        }
+
+        /* Learning Goal Section */
+        .learning-goal {
+            background: linear-gradient(135deg, #e8f5e8 0%, #f0f8ff 100%);
+            margin: 30px;
+            padding: 25px;
+            border-radius: 12px;
+            border-left: 5px solid #28a745;
+        }
+
+        .goal-title {
+            font-size: 1.3em;
+            font-weight: 600;
+            color: #2c3e50;
+            margin: 0 0 15px 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .goal-text {
+            font-size: 1.1em;
+            line-height: 1.7;
+            color: #2c3e50;
+        }
+
+        /* JSON Content Sections */
+        .content-wrapper {
+            padding: 0 30px 30px 30px;
+        }
+
+        .content-sections-grid {
+            display: grid;
+            gap: 25px;
+            margin: 20px 0;
+        }
+
+        .json-content-section {
+            background: #ffffff;
+            border-radius: 16px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            overflow: hidden;
+            border-left: 6px solid;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            margin-bottom: 20px;
+        }
+
+        .json-content-section:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+        }
+
+        /* Distinct colors and backgrounds for different sections */
+        .introduction-container {
+            border-left-color: #007bff;
+            background: linear-gradient(135deg, #ffffff 0%, #f0f7ff 100%);
+        }
+        .core-concepts-container {
+            border-left-color: #28a745;
+            background: linear-gradient(135deg, #ffffff 0%, #f3fcf6 100%);
+        }
+        .examples-container {
+            border-left-color: #ffc107;
+            background: linear-gradient(135deg, #ffffff 0%, #fffdf3 100%);
+        }
+        .next-steps-container {
+            border-left-color: #17a2b8;
+            background: linear-gradient(135deg, #ffffff 0%, #f3fbfd 100%);
+        }
+        .common-mistakes-container {
+            border-left-color: #dc3545;
+            background: linear-gradient(135deg, #ffffff 0%, #fdf3f4 100%);
+        }
+        .key-takeaways-container {
+            border-left-color: #6f42c1;
+            background: linear-gradient(135deg, #ffffff 0%, #f9f6fd 100%);
+        }
+        .additional-resources-container {
+            border-left-color: #fd7e14;
+            background: linear-gradient(135deg, #ffffff 0%, #fff6f0 100%);
+        }
+
+        .section-header {
+            background: linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(248,249,250,0.9) 100%);
+            padding: 25px 30px;
+            margin: 0;
+            border-bottom: 2px solid rgba(0,0,0,0.05);
+            position: relative;
+        }
+
+        .json-content-section h2 {
+            margin: 0;
+            font-size: 1.5em;
+            font-weight: 700;
+            color: #2c3e50;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.05);
+        }
+
+        /* Section-specific icons */
+        .introduction-container h2::before { content: '📚'; font-size: 1.2em; }
+        .core-concepts-container h2::before { content: '🎯'; font-size: 1.2em; }
+        .examples-container h2::before { content: '💡'; font-size: 1.2em; }
+        .next-steps-container h2::before { content: '🚀'; font-size: 1.2em; }
+        .common-mistakes-container h2::before { content: '⚠️'; font-size: 1.2em; }
+        .key-takeaways-container h2::before { content: '✨'; font-size: 1.2em; }
+        .additional-resources-container h2::before { content: '🔗'; font-size: 1.2em; }
+
+        .section-content {
+            padding: 30px;
+            line-height: 1.8;
+        }
+
+        .section-content p {
+            margin: 0 0 16px 0;
+            font-size: 1.1em;
+            color: #2c3e50;
+            text-align: justify;
+        }
+
+        .section-content p:last-child {
+            margin-bottom: 0;
+        }
+
+        .section-content ul {
+            margin: 16px 0;
+            padding-left: 0;
+            list-style: none;
+        }
+
+        .section-content li {
+            margin: 12px 0;
+            font-size: 1.05em;
+            color: #2c3e50;
+            padding-left: 25px;
+            position: relative;
+            line-height: 1.6;
+        }
+
+        .section-content li::before {
+            content: '▸';
+            position: absolute;
+            left: 0;
+            color: #007bff;
+            font-weight: bold;
+            font-size: 1.2em;
+        }
+
+        .section-content strong {
+            color: #1e3c72;
+            font-weight: 700;
+            background: rgba(30, 60, 114, 0.1);
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+
+        .section-content em {
+            color: #6c757d;
+            font-style: italic;
+            background: rgba(108, 117, 125, 0.1);
+            padding: 1px 3px;
+            border-radius: 3px;
+        }
+
+        /* Special formatting for different content types */
+        .definition-block {
+            background: rgba(40, 167, 69, 0.1);
+            border-left: 4px solid #28a745;
+            padding: 15px 20px;
+            margin: 16px 0;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .example-block {
+            background: rgba(255, 193, 7, 0.1);
+            border-left: 4px solid #ffc107;
+            padding: 15px 20px;
+            margin: 16px 0;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .warning-block {
+            background: rgba(220, 53, 69, 0.1);
+            border-left: 4px solid #dc3545;
+            padding: 15px 20px;
+            margin: 16px 0;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .tip-block {
+            background: rgba(23, 162, 184, 0.1);
+            border-left: 4px solid #17a2b8;
+            padding: 15px 20px;
+            margin: 16px 0;
+            border-radius: 0 8px 8px 0;
+        }
+
+        /* Content separation lines */
+        .content-separator {
+            height: 2px;
+            background: linear-gradient(90deg, transparent 0%, #dee2e6 20%, #dee2e6 80%, transparent 100%);
+            margin: 30px 0;
+            border: none;
+        }
+
+        /* Practice Task Section */
+        .practice-task {
+            background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+            margin: 30px;
+            padding: 25px;
+            border-radius: 12px;
+            border-left: 5px solid #ffc107;
+        }
+
+        .practice-title {
+            font-size: 1.3em;
+            font-weight: 600;
+            color: #2c3e50;
+            margin: 0 0 15px 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .practice-text {
+            font-size: 1.1em;
+            line-height: 1.7;
+            color: #2c3e50;
+        }
+
+        /* Footer */
+        .footer {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .timestamp {
+            font-size: 0.9em;
+            opacity: 0.8;
+            margin-bottom: 10px;
+        }
+
+        .footer-text {
+            font-size: 1em;
+            opacity: 0.9;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 600px) {
+            body { padding: 10px; }
+            .email-container { border-radius: 8px; }
+            .header { padding: 30px 20px; }
+            .main-title { font-size: 2em; }
+            .info-grid { grid-template-columns: 1fr; gap: 15px; }
+            .learning-goal, .practice-task { margin: 20px; padding: 20px; }
+            .content-wrapper { padding: 0 20px 20px 20px; }
+        }
+
+        /* Print Styles */
+        @media print {
+            body { background: white; padding: 0; }
+            .email-container { box-shadow: none; }
+            .header::before { display: none; }
+        }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <!-- Header Section -->
+        <div class="header">
+            <div class="header-content">
+                <div class="day-badge">📅 Day {{DAY}} - Week {{WEEK}}</div>
+                <h1 class="main-title">📈 Stock Knowledge Journey</h1>
+                <p class="subtitle">{{TOPIC}}</p>
+            </div>
+        </div>
+
+        <!-- Learning Information Bar -->
+        <div class="learning-info">
+            <div class="info-grid">
+                <div class="info-item">
+                    <div class="info-label">Phase</div>
+                    <div class="info-value">
+                        <span class="phase-badge">{{PHASE}}</span>
+                    </div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Week</div>
+                    <div class="info-value">{{WEEK}}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Day</div>
+                    <div class="info-value">{{DAY}}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Topic</div>
+                    <div class="info-value">{{TOPIC}}</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Learning Goal Section -->
+        <div class="learning-goal">
+            <h2 class="goal-title">🎯 Today's Learning Goal</h2>
+            <div class="goal-text">{{LEARNING_GOAL}}</div>
+        </div>
+
+        <!-- Dynamic JSON Content -->
+        <div class="content-wrapper">
+            {{CONTENT}}
+        </div>
+
+        <!-- Practice Task Section -->
+        <div class="practice-task">
+            <h2 class="practice-title">💡 Practice Task</h2>
+            <div class="practice-text">{{PRACTICE_TASK}}</div>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <div class="timestamp">Generated on {{TIMESTAMP}}</div>
+            <div class="footer-text">📚 Continue your stock knowledge journey - one day at a time!</div>
+        </div>
+    </div>
+</body>
+</html>
+

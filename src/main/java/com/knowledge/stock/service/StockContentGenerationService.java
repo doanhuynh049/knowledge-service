@@ -221,7 +221,7 @@ public class StockContentGenerationService {
     }
 
     /**
-     * Generate structured prompt for specific learning day
+     * Generate structured prompt for specific learning day with JSON output format
      */
     public String generateStructuredStockPrompt(StockLearningDay learningDay) {
         log.info("🧠 Generating structured prompt for Day {}: {}", learningDay.getDay(), learningDay.getTopic());
@@ -237,30 +237,66 @@ public class StockContentGenerationService {
         prompt.append("- Topic: ").append(learningDay.getTopic()).append("\n");
         prompt.append("- Learning Goal: ").append(learningDay.getLearningGoal()).append("\n\n");
 
-        prompt.append("**Content Requirements:**\n");
-        prompt.append("Create comprehensive educational content about: ").append(learningDay.getTopic()).append("\n\n");
+        prompt.append("**IMPORTANT: Your response must be in valid JSON format with the following structure:**\n\n");
 
-        prompt.append("Structure your response with these sections:\n");
-        prompt.append("1. **Introduction & Why This Matters**: Brief overview and importance\n");
-        prompt.append("2. **Core Concepts**: Key principles and definitions\n");
-        prompt.append("3. **Practical Examples**: Real-world applications with VN and US market examples\n");
-        prompt.append("4. **Step-by-Step Guide**: How to apply this knowledge\n");
-        prompt.append("5. **Common Mistakes**: What beginners should avoid\n");
-        prompt.append("6. **Quick Reference**: Key points summary for future reference\n\n");
+        prompt.append("{\n");
+        prompt.append("  \"introduction\": {\n");
+        prompt.append("    \"title\": \"Introduction & Why This Matters\",\n");
+        prompt.append("    \"content\": \"Brief overview and importance of the topic...\"\n");
+        prompt.append("  },\n");
+        prompt.append("  \"coreConceptsDefinitions\": {\n");
+        prompt.append("    \"title\": \"Core Concepts & Definitions\",\n");
+        prompt.append("    \"content\": \"Key principles and definitions...\"\n");
+        prompt.append("  },\n");
+        prompt.append("  \"examples\": {\n");
+        prompt.append("    \"title\": \"Real-World Examples\",\n");
+        prompt.append("    \"content\": \"Practical applications with VN and US market examples...\"\n");
+        prompt.append("  },\n");
+        prompt.append("  \"stepByStepGuide\": {\n");
+        prompt.append("    \"title\": \"Step-by-Step Implementation Guide\",\n");
+        prompt.append("    \"content\": \"How to apply this knowledge practically...\"\n");
+        prompt.append("  },\n");
+        prompt.append("  \"commonMistakes\": {\n");
+        prompt.append("    \"title\": \"Common Mistakes to Avoid\",\n");
+        prompt.append("    \"content\": \"What beginners should avoid...\"\n");
+        prompt.append("  },\n");
+        prompt.append("  \"keyTakeaways\": {\n");
+        prompt.append("    \"title\": \"Key Takeaways\",\n");
+        prompt.append("    \"content\": \"Summary of most important points...\"\n");
+        prompt.append("  },\n");
+        prompt.append("  \"nextSteps\": {\n");
+        prompt.append("    \"title\": \"Next Steps & Further Learning\",\n");
+        prompt.append("    \"content\": \"What to do next and additional resources...\"\n");
+        prompt.append("  }\n");
+        prompt.append("}\n\n");
+
+        prompt.append("**Content Requirements for: ").append(learningDay.getTopic()).append("**\n\n");
+
+        prompt.append("**Guidelines for each section:**\n");
+        prompt.append("- **Introduction**: Explain why this topic matters for investors (2-3 paragraphs)\n");
+        prompt.append("- **Core Concepts**: Define key terms and principles clearly with bullet points\n");
+        prompt.append("- **Examples**: Include specific examples from Vietnamese (VN-Index) and US markets (S&P500, NASDAQ)\n");
+        prompt.append("- **Step-by-Step Guide**: Provide actionable steps with numbered lists\n");
+        prompt.append("- **Common Mistakes**: List 3-5 common errors with explanations\n");
+        prompt.append("- **Key Takeaways**: Summarize 4-6 most important points as bullet points\n");
+        prompt.append("- **Next Steps**: Practical actions and learning resources\n\n");
 
         prompt.append("**Important Guidelines:**\n");
         prompt.append("- Write for beginners who are serious about learning\n");
-        prompt.append("- Include specific examples from both Vietnamese (VN-Index) and US markets (S&P500, NASDAQ)\n");
+        prompt.append("- Include specific stock examples (both Vietnamese and US companies)\n");
         prompt.append("- Make it actionable - students should be able to immediately apply this knowledge\n");
-        prompt.append("- Keep language clear but professional\n");
+        prompt.append("- Use HTML formatting in content: <strong>bold</strong>, <em>italic</em>, <ul><li>lists</li></ul>, <ol><li>numbered lists</li></ol>\n");
+        prompt.append("- Keep JSON valid - escape quotes properly with backslashes\n");
         prompt.append("- Focus on practical application rather than just theory\n\n");
 
         prompt.append("**Practice Task Context:**\n");
         prompt.append("Students will: ").append(learningDay.getPracticeTask()).append("\n\n");
 
-        prompt.append("Ensure your content directly supports this practice task and provides the knowledge needed to complete it successfully.");
+        prompt.append("Ensure your content directly supports this practice task and provides the knowledge needed to complete it successfully.\n\n");
 
-        log.debug("📝 Generated structured prompt ({} characters) for Day {}", prompt.length(), learningDay.getDay());
+        prompt.append("**CRITICAL: Return ONLY the JSON object, no additional text before or after the JSON.**");
+
+        log.debug("📝 Generated structured JSON prompt ({} characters) for Day {}", prompt.length(), learningDay.getDay());
         return prompt.toString();
     }
 }

@@ -1,15 +1,21 @@
 package com.knowledge.stock.service;
 
-import com.knowledge.stock.model.StockLearningDay;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
+import com.knowledge.stock.model.StockLearningDay;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StreamUtils;
 
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
@@ -20,8 +26,8 @@ public class StockEmailService {
 
     private final JavaMailSender mailSender;
 
+    private final ObjectMapper objectMapper = new ObjectMapper();
     @Value("${app.mail-from}")
-
     private String fromEmail;
 
     @Value("${app.mail-to}")
@@ -33,7 +39,7 @@ public class StockEmailService {
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     /**
-     * Send structured learning email with comprehensive logging
+     * Send structured learning email using HTML template
      */
     public void sendStructuredLearningEmail(StockLearningDay learningDay, String content) {
         log.info("📧 Preparing structured learning email for Day {}: {}",
@@ -46,7 +52,7 @@ public class StockEmailService {
 
         try {
             String subject = learningDay.getEmailSubject();
-            String htmlContent = createStructuredLearningEmailTemplate(learningDay, content);
+            String htmlContent = loadAndProcessTemplate(learningDay, content);
 
             log.debug("📝 Email prepared - Subject: {}", subject);
             log.debug("📄 Email content length: {} characters", htmlContent.length());
@@ -61,6 +67,31 @@ public class StockEmailService {
                 learningDay.getDay(), e.getMessage(), e);
             throw new RuntimeException("Email sending failed: " + e.getMessage(), e);
         }
+    }
+
+    /**
+     * Load HTML template and replace placeholders
+     */
+    private String loadAndProcessTemplate(StockLearningDay learningDay, String content) throws IOException {
+        log.debug("🎨 Loading and processing HTML template for Day {}", learningDay.getDay());
+
+        // Load the HTML template
+        ClassPathResource resource = new ClassPathResource("stock-knowledge-email-template.html");
+        String template = StreamUtils.copyToString(resource.getInputStream(), StandardCharsets.UTF_8);
+
+        // Replace placeholders with actual data
+        String processedHtml = template
+            .replace("{{DAY}}", String.valueOf(learningDay.getDay()))
+            .replace("{{WEEK}}", learningDay.getWeek())
+            .replace("{{PHASE}}", learningDay.getPhase())
+            .replace("{{TOPIC}}", learningDay.getTopic())
+            .replace("{{LEARNING_GOAL}}", learningDay.getLearningGoal())
+            .replace("{{CONTENT}}", parseJsonToStructuredHtml(content))
+            .replace("{{PRACTICE_TASK}}", learningDay.getPracticeTask())
+            .replace("{{TIMESTAMP}}", LocalDateTime.now().format(DATE_FORMATTER));
+
+        log.debug("✅ Template processed successfully ({} characters)", processedHtml.length());
+        return processedHtml;
     }
 
     /**
@@ -82,221 +113,228 @@ public class StockEmailService {
     }
 
     /**
-     * Create structured HTML email template for learning days
+     * Parse JSON content and convert to structured HTML with proper containers
      */
-    private String createStructuredLearningEmailTemplate(StockLearningDay learningDay, String content) {
-        log.debug("🎨 Creating structured email template for Day {}", learningDay.getDay());
+    private String parseJsonToStructuredHtml(String jsonContent) {
+        log.debug("🔧 Parsing JSON content to structured HTML with enhanced formatting");
 
-        return String.format("""
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <meta charset="UTF-8">
-                <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                <title>Day %d Stock Learning</title>
-                <style>
-                    body {
-                        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-                        line-height: 1.6;
-                        color: #333;
-                        max-width: 900px;
-                        margin: 0 auto;
-                        padding: 20px;
-                        background-color: #f8f9fa;
-                    }
-                    .container {
-                        background-color: white;
-                        border-radius: 15px;
-                        padding: 30px;
-                        box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-                    }
-                    .header {
-                        background: linear-gradient(135deg, #2196F3 0%%, #1976D2 100%%);
-                        color: white;
-                        padding: 25px;
-                        border-radius: 12px;
-                        text-align: center;
-                        margin-bottom: 30px;
-                    }
-                    .day-badge {
-                        background-color: #FF5722;
-                        color: white;
-                        padding: 8px 16px;
-                        border-radius: 20px;
-                        font-size: 14px;
-                        font-weight: bold;
-                        display: inline-block;
-                        margin-bottom: 10px;
-                    }
-                    .phase-badge {
-                        background-color: #4CAF50;
-                        color: white;
-                        padding: 4px 12px;
-                        border-radius: 15px;
-                        font-size: 12px;
-                        display: inline-block;
-                        margin-left: 10px;
-                    }
-                    .learning-goal {
-                        background: linear-gradient(135deg, #E3F2FD 0%%, #BBDEFB 100%%);
-                        border-left: 5px solid #2196F3;
-                        padding: 20px;
-                        margin: 20px 0;
-                        border-radius: 8px;
-                    }
-                    .practice-task {
-                        background: linear-gradient(135deg, #FFF3E0 0%%, #FFE0B2 100%%);
-                        border-left: 5px solid #FF9800;
-                        padding: 20px;
-                        margin: 20px 0;
-                        border-radius: 8px;
-                    }
-                    .content {
-                        font-size: 16px;
-                        line-height: 1.8;
-                        margin: 25px 0;
-                    }
-                    .content h1, .content h2, .content h3 {
-                        color: #1976D2;
-                        margin-top: 30px;
-                        margin-bottom: 15px;
-                    }
-                    .content h1 { 
-                        font-size: 24px; 
-                        border-bottom: 3px solid #2196F3;
-                        padding-bottom: 10px;
-                    }
-                    .content h2 { 
-                        font-size: 20px;
-                        color: #FF5722;
-                    }
-                    .content h3 { font-size: 18px; }
-                    .content strong {
-                        color: #E65100;
-                        font-weight: 600;
-                    }
-                    .content ul, .content ol {
-                        padding-left: 25px;
-                    }
-                    .content li {
-                        margin-bottom: 10px;
-                    }
-                    .progress-section {
-                        background: linear-gradient(135deg, #E8F5E8 0%%, #C8E6C9 100%%);
-                        border-radius: 10px;
-                        padding: 20px;
-                        margin: 25px 0;
-                        text-align: center;
-                    }
-                    .next-steps {
-                        background: linear-gradient(135deg, #F3E5F5 0%%, #E1BEE7 100%%);
-                        border-radius: 10px;
-                        padding: 20px;
-                        margin: 25px 0;
-                    }
-                    .footer {
-                        margin-top: 40px;
-                        padding: 25px;
-                        background: linear-gradient(135deg, #ECEFF1 0%%, #CFD8DC 100%%);
-                        border-radius: 12px;
-                        font-size: 14px;
-                        color: #546E7A;
-                        text-align: center;
-                    }
-                    .disclaimer {
-                        background-color: #FFECB3;
-                        border: 2px solid #FFC107;
-                        border-radius: 10px;
-                        padding: 20px;
-                        margin: 25px 0;
-                        font-size: 14px;
-                        color: #E65100;
-                    }
-                    .timestamp {
-                        color: #78909C;
-                        font-size: 12px;
-                        text-align: right;
-                        margin-top: 15px;
-                    }
-                </style>
-            </head>
-            <body>
-                <div class="container">
-                    <div class="header">
-                        <div class="day-badge">Day %d</div>
-                        <div class="phase-badge">%s</div>
-                        <h1>📈 %s</h1>
-                        <p><strong>%s</strong></p>
-                    </div>
-                    
-                    <div class="learning-goal">
-                        <h3>🎯 Today's Learning Goal</h3>
-                        <p><strong>%s</strong></p>
-                    </div>
-                    
-                    <div class="content">
-                        %s
-                    </div>
-                    
-                    <div class="practice-task">
-                        <h3>💼 Your Practice Task</h3>
-                        <p><strong>%s</strong></p>
-                    </div>
-                    
-                    <div class="progress-section">
-                        <h3>📊 Learning Journey Progress</h3>
-                        <p>You're building your stock market knowledge step by step!</p>
-                        <p><em>Each day brings you closer to confident investing</em></p>
-                    </div>
-                    
-                    <div class="next-steps">
-                        <h3>🚀 Action Steps</h3>
-                        <ol>
-                            <li><strong>Study (20 minutes):</strong> Read through today's content carefully</li>
-                            <li><strong>Apply (15 minutes):</strong> Complete the practice task above</li>
-                            <li><strong>Reflect:</strong> Write down 3 key insights from your analysis</li>
-                            <li><strong>Decide:</strong> Make a simple investment decision based on your analysis</li>
-                        </ol>
-                    </div>
-                    
-                    <div class="disclaimer">
-                        <strong>⚠️ Important Educational Disclaimer:</strong> This content is for educational purposes only. 
-                        Always conduct your own research and consider consulting with licensed financial advisors before making investment decisions. 
-                        Practice with virtual portfolios before risking real money.
-                    </div>
-                    
-                    <div class="footer">
-                        <p>📚 <strong>Stock Learning Curriculum</strong> - Day %d of 20</p>
-                        <p>🎓 Building Your Investment Knowledge Daily</p>
-                        <p>💡 <em>Consistency in learning leads to confidence in investing</em></p>
-                        <div class="timestamp">Generated on: %s</div>
-                    </div>
-                </div>
-            </body>
-            </html>
-            """,
-            learningDay.getDay(),                    // Title Day
-            learningDay.getDay(),                    // Badge Day
-            learningDay.getPhase(),                  // Phase
-            learningDay.getWeek(),                   // Week
-            learningDay.getTopic(),                  // Topic
-            learningDay.getLearningGoal(),           // Learning Goal
-            formatContentForHtml(content),           // Main content
-            learningDay.getPracticeTask(),           // Practice Task
-            learningDay.getDay(),                    // Footer Day
-            LocalDateTime.now().format(DATE_FORMATTER) // Timestamp
-        );
+        try {
+            // Clean up the JSON content (remove any markdown formatting around it)
+            String cleanJson = cleanJsonContent(jsonContent);
+
+            JsonNode rootNode = objectMapper.readTree(cleanJson);
+            StringBuilder htmlBuilder = new StringBuilder();
+
+            // Add content sections grid container
+            htmlBuilder.append("<div class=\"content-sections-grid\">\n");
+
+            // Process each section with enhanced formatting and better separation
+            processSection(htmlBuilder, rootNode, "introduction", "introduction-container");
+            addContentSeparator(htmlBuilder);
+
+            processSection(htmlBuilder, rootNode, "coreConceptsDefinitions", "core-concepts-container");
+            addContentSeparator(htmlBuilder);
+
+            processSection(htmlBuilder, rootNode, "examples", "examples-container");
+            addContentSeparator(htmlBuilder);
+
+            processSection(htmlBuilder, rootNode, "stepByStepGuide", "next-steps-container");
+            addContentSeparator(htmlBuilder);
+
+            processSection(htmlBuilder, rootNode, "commonMistakes", "common-mistakes-container");
+            addContentSeparator(htmlBuilder);
+
+            processSection(htmlBuilder, rootNode, "keyTakeaways", "key-takeaways-container");
+            addContentSeparator(htmlBuilder);
+
+            processSection(htmlBuilder, rootNode, "nextSteps", "additional-resources-container");
+
+            // Close content sections grid
+            htmlBuilder.append("</div>\n");
+
+            String result = htmlBuilder.toString();
+            log.debug("✅ JSON content parsed successfully with enhanced formatting ({} characters)", result.length());
+            return result;
+
+        } catch (Exception e) {
+            log.error("❌ Failed to parse JSON content: {}", e.getMessage());
+            // Fallback to basic markdown formatting if JSON parsing fails
+            return formatMarkdownToHtml(jsonContent);
+        }
     }
 
     /**
-     * Format content for HTML display with enhanced formatting
+     * Add visual content separator between sections
      */
-    private String formatContentForHtml(String content) {
-        log.debug("🎨 Formatting content for HTML display");
+    private void addContentSeparator(StringBuilder htmlBuilder) {
+        htmlBuilder.append("<hr class=\"content-separator\">\n");
+    }
 
-        if (content == null || content.trim().isEmpty()) {
-            return "<p>No content available.</p>";
+    /**
+     * Process individual section and add to HTML with proper container structure
+     */
+    private void processSection(StringBuilder htmlBuilder, JsonNode rootNode, String sectionKey, String containerClass) {
+        JsonNode sectionNode = rootNode.get(sectionKey);
+        if (sectionNode != null && !sectionNode.isNull()) {
+            htmlBuilder.append("<div class=\"json-content-section ").append(containerClass).append("\">\n");
+
+            // Add section header with proper styling
+            htmlBuilder.append("  <div class=\"section-header\">\n");
+            JsonNode titleNode = sectionNode.get("title");
+            if (titleNode != null && !titleNode.isNull()) {
+                htmlBuilder.append("    <h2>").append(escapeHtml(titleNode.asText())).append("</h2>\n");
+            }
+            htmlBuilder.append("  </div>\n");
+
+            // Add section content with proper container
+            htmlBuilder.append("  <div class=\"section-content\">\n");
+            JsonNode contentNode = sectionNode.get("content");
+            if (contentNode != null && !contentNode.isNull()) {
+                String content = contentNode.asText();
+                htmlBuilder.append("    ").append(formatEnhancedContent(content, sectionKey)).append("\n");
+            } else {
+                htmlBuilder.append("    <p><em>Content not available for this section.</em></p>\n");
+            }
+            htmlBuilder.append("  </div>\n");
+
+            htmlBuilder.append("</div>\n\n");
         }
+    }
+
+    /**
+     * Enhanced content formatting with section-specific styling
+     */
+    private String formatEnhancedContent(String content, String sectionType) {
+        if (content == null || content.trim().isEmpty()) {
+            return "<p><em>No content available.</em></p>";
+        }
+
+        // Clean up the content first
+        String cleanContent = content.trim();
+
+        // If content already contains HTML tags, clean it up and enhance it
+        if (cleanContent.contains("<") && cleanContent.contains(">")) {
+            return enhanceExistingHtml(cleanContent, sectionType);
+        }
+
+        // Convert markdown-style formatting to enhanced HTML
+        String htmlContent = cleanContent
+            .replaceAll("\\*\\*([^*]+)\\*\\*", "<strong>$1</strong>")  // **bold** to <strong>
+            .replaceAll("\\*([^*]+)\\*", "<em>$1</em>")                // *italic* to <em>
+            .replaceAll("(?m)^#{3}\\s+(.+)$", "<h4>$1</h4>")          // ### to h4
+            .replaceAll("(?m)^#{2}\\s+(.+)$", "<h3>$1</h3>")          // ## to h3
+            .replaceAll("(?m)^- (.+)$", "<li>$1</li>")                 // - item to <li>
+            .replaceAll("(?m)^\\d+\\. (.+)$", "<li>$1</li>")           // 1. item to <li>
+            .replaceAll("\\n\\n", "</p>\n<p>")                         // Double newlines to paragraphs
+            .replaceAll("\\n", "<br>\n");                              // Single newlines to breaks
+
+        // Wrap in paragraphs if not already formatted
+        if (!htmlContent.startsWith("<")) {
+            htmlContent = "<p>" + htmlContent + "</p>";
+        }
+
+        // Wrap consecutive <li> items in proper lists
+        htmlContent = wrapListItems(htmlContent);
+
+        // Add section-specific enhancements
+        htmlContent = addSectionSpecificFormatting(htmlContent, sectionType);
+
+        return htmlContent;
+    }
+
+    /**
+     * Enhance existing HTML content with section-specific formatting
+     */
+    private String enhanceExistingHtml(String content, String sectionType) {
+        String enhanced = content
+            .replaceAll("<p></p>", "")
+            .replaceAll("<p>\\s*<h([1-6])>", "<h$1>")
+            .replaceAll("</h([1-6])>\\s*</p>", "</h$1>")
+            .trim();
+
+        return addSectionSpecificFormatting(enhanced, sectionType);
+    }
+
+    /**
+     * Wrap consecutive list items in proper ul/ol tags
+     */
+    private String wrapListItems(String content) {
+        // Handle unordered lists
+        String result = content.replaceAll("(<li>.*?</li>)", "<ul>$1</ul>");
+        result = result.replaceAll("</ul>\\s*<ul>", ""); // Merge consecutive ul tags
+
+        return result;
+    }
+
+    /**
+     * Add section-specific formatting and styling
+     */
+    private String addSectionSpecificFormatting(String content, String sectionType) {
+        switch (sectionType) {
+            case "coreConceptsDefinitions":
+                // Wrap definitions in special blocks
+                content = content.replaceAll("<strong>([^<]+)</strong>:",
+                    "<div class=\"definition-block\"><strong>$1</strong>:");
+                break;
+
+            case "examples":
+                // Wrap examples in special blocks
+                content = content.replaceAll("<strong>([^<]+):</strong>",
+                    "<div class=\"example-block\"><strong>$1:</strong>");
+                break;
+
+            case "commonMistakes":
+                // Wrap warnings in special blocks
+                content = content.replaceAll("<li>([^<]+)</li>",
+                    "<div class=\"warning-block\"><li>$1</li></div>");
+                break;
+
+            case "keyTakeaways":
+                // Enhance key takeaways with special formatting
+                content = content.replaceAll("<li>([^<]+)</li>",
+                    "<div class=\"tip-block\"><li>$1</li></div>");
+                break;
+        }
+
+        return content;
+    }
+
+    /**
+     * Clean JSON content by removing any surrounding markdown or extra text
+     */
+    private String cleanJsonContent(String content) {
+        // Remove markdown code blocks if present
+        String cleaned = content.replaceAll("```json\\s*", "").replaceAll("```\\s*$", "");
+
+        // Find the JSON object start and end
+        int jsonStart = cleaned.indexOf('{');
+        int jsonEnd = cleaned.lastIndexOf('}');
+
+        if (jsonStart != -1 && jsonEnd != -1 && jsonEnd > jsonStart) {
+            cleaned = cleaned.substring(jsonStart, jsonEnd + 1);
+        }
+
+        return cleaned.trim();
+    }
+
+    /**
+     * Escape HTML characters for safe display
+     */
+    private String escapeHtml(String text) {
+        if (text == null) return "";
+        return text
+            .replace("&", "&amp;")
+            .replace("<", "&lt;")
+            .replace(">", "&gt;")
+            .replace("\"", "&quot;")
+            .replace("'", "&#39;");
+    }
+
+    /**
+     * Fallback method for non-JSON content using markdown-style formatting
+     */
+    private String formatMarkdownToHtml(String content) {
+        log.debug("🔄 Using fallback markdown formatting");
 
         // Enhanced markdown-style formatting to HTML
         String htmlContent = content
@@ -316,7 +354,7 @@ public class StockEmailService {
             .replaceAll("<p><h([1-6])>", "<h$1>")
             .replaceAll("</h([1-6])></p>", "</h$1>");
 
-        log.debug("✅ Content formatted successfully ({} characters)", htmlContent.length());
+        log.debug("✅ Markdown content formatted successfully ({} characters)", htmlContent.length());
         return htmlContent;
     }
 }
