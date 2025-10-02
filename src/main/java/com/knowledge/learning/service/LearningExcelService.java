@@ -27,17 +27,16 @@ public class LearningExcelService {
 
     // Column indices for the Excel file
     private static final int COL_DAY = 0;
-    private static final int COL_WEEK = 1;
-    private static final int COL_PHASE = 2;
-    private static final int COL_ALGORITHM_TASK = 3;
-    private static final int COL_THEORY_TASK = 4;
-    private static final int COL_CODING_TASK = 5;
-    private static final int COL_REFLECTION_TASK = 6;
-    private static final int COL_STATUS = 7;
-    private static final int COL_NOTES = 8;
-    private static final int COL_LAST_PROCESSED = 9;
-    private static final int COL_COMPLETED_DATE = 10;
-    private static final int COL_EMAIL_SUBJECT = 11;
+    private static final int COL_PHASE = 1;
+    private static final int COL_ALGORITHM_TASK = 2;
+    private static final int COL_THEORY_TASK = 3;
+    private static final int COL_CODING_TASK = 4;
+    private static final int COL_REFLECTION_TASK = 5;
+    private static final int COL_STATUS = 6;
+    private static final int COL_NOTES = 7;
+    private static final int COL_LAST_PROCESSED = 8;
+    private static final int COL_COMPLETED_DATE = 9;
+    private static final int COL_EMAIL_SUBJECT = 10;
 
     /**
      * Get next learning day to process
@@ -202,7 +201,7 @@ public class LearningExcelService {
 
             // Create header row
             Row headerRow = sheet.createRow(0);
-            String[] headers = {"Day", "Week", "Phase", "Algorithm Task", "Theory Task", 
+            String[] headers = {"Day", "Phase", "Algorithm Task", "Theory Task", 
                                "Coding Task", "Reflection Task", "Status", "Notes", 
                                "Last Processed", "Completed Date", "Email Subject"};
 
@@ -295,7 +294,6 @@ public class LearningExcelService {
                                    String algorithmFocus, String theoryFocus, String codingFocus) {
         for (int i = 0; i < 30; i++) {
             int day = startDay + i;
-            int week = ((day - 1) / 7) + 1;
             
             String algorithmTask = generateAlgorithmTask(day, algorithmFocus);
             String theoryTask = generateTheoryTask(day, theoryFocus);  
@@ -305,7 +303,6 @@ public class LearningExcelService {
             
             curriculum.add(new String[]{
                 String.valueOf(day),
-                "Week " + week,
                 phase,
                 algorithmTask,
                 theoryTask, 
@@ -342,7 +339,7 @@ public class LearningExcelService {
         LearningDay learningDay = new LearningDay();
 
         learningDay.setDay((int) row.getCell(COL_DAY).getNumericCellValue());
-        learningDay.setWeek(getCellStringValue(row.getCell(COL_WEEK)));
+        learningDay.setWeek("Week " + (((int) row.getCell(COL_DAY).getNumericCellValue() - 1) / 7 + 1)); // Calculate week from day
         learningDay.setPhase(getCellStringValue(row.getCell(COL_PHASE)));
         learningDay.setAlgorithmTask(getCellStringValue(row.getCell(COL_ALGORITHM_TASK)));
         learningDay.setTheoryTask(getCellStringValue(row.getCell(COL_THEORY_TASK)));
