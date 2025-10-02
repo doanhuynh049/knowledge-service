@@ -58,11 +58,11 @@ public class LearningProcessingService {
             // Step 1: Generate AI prompt specific to the learning goals
             log.info("🧠 Generating AI prompt for: {}", learningDay.getLearningGoal());
             String prompt = contentGenerationService.generateStructuredLearningPrompt(learningDay);
-            log.info("✅ AI prompt generated for Day {} prompt: ", day, prompt);
+            log.info("✅ AI prompt generated for Day {} prompt: {} ", day, prompt);
             // Step 2: Get AI response
             log.info("🤖 Requesting AI response for Day {} content...", day);
             String aiResponse = contentGenerationService.getAIResponse(prompt);
-            log.info("✅ AI response generated for Day {} response: ", day, aiResponse);
+            log.info("✅ AI response generated for Day {} response: {} ", day, aiResponse);
 
             // Step 3: Send structured email
             log.info("📧 Preparing structured email for Day {}...", day);

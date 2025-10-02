@@ -98,7 +98,8 @@ public class LearningContentGenerationService {
         StringBuilder prompt = new StringBuilder();
 
         prompt.append("You are a professional software development educator creating content for Day ")
-              .append(learningDay.getDay()).append(" of a 6-month structured learning curriculum.\n\n");
+            .append(learningDay.getDay())
+            .append(" of a 6-month structured learning curriculum.\n\n");
 
         prompt.append("**Learning Context:**\n");
         prompt.append("- Phase: ").append(learningDay.getPhase()).append("\n");
@@ -109,37 +110,38 @@ public class LearningContentGenerationService {
         prompt.append("- Coding Task: ").append(learningDay.getCodingTask()).append("\n");
         prompt.append("- Reflection Task: ").append(learningDay.getReflectionTask()).append("\n\n");
 
-        // Request JSON format response
-        prompt.append("Please provide a comprehensive learning guide in JSON format:\n\n");
-        prompt.append("{\n");
-        prompt.append("  \"dailyOverview\": {\n");
-        prompt.append("    \"title\": \"Daily Learning Overview\",\n");
-        prompt.append("    \"content\": \"Brief overview of today's learning objectives and schedule...\"\n");
-        prompt.append("  },\n");
-        prompt.append("  \"algorithmGuidance\": {\n");
-        prompt.append("    \"title\": \"Algorithm Practice Guide\",\n");
-        prompt.append("    \"content\": \"Detailed guidance for algorithm practice, problem-solving strategies...\"\n");
-        prompt.append("  },\n");
-        prompt.append("  \"theoryExplanation\": {\n");
-        prompt.append("    \"title\": \"Theory Deep Dive\",\n");
-        prompt.append("    \"content\": \"Comprehensive explanation of theoretical concepts...\"\n");
-        prompt.append("  },\n");
-        prompt.append("  \"codingExercises\": {\n");
-        prompt.append("    \"title\": \"Hands-on Coding Guide\",\n");
-        prompt.append("    \"content\": \"Step-by-step coding exercises and practical applications...\"\n");
-        prompt.append("  },\n");
-        prompt.append("  \"reflectionPrompts\": {\n");
-        prompt.append("    \"title\": \"Reflection & Documentation\",\n");
-        prompt.append("    \"content\": \"Structured reflection questions and documentation guidelines...\"\n");  
-        prompt.append("  },\n");
-        prompt.append("  \"resourcesAndNext\": {\n");
-        prompt.append("    \"title\": \"Resources & Tomorrow's Prep\",\n");
-        prompt.append("    \"content\": \"Additional resources and preparation for next day...\"\n");
-        prompt.append("  }\n");
-        prompt.append("}\n\n");
+        // 🔴 Key requirement: Generate complete HTML document
+        prompt.append("Create a comprehensive HTML learning guide document (complete HTML with DOCTYPE, head, body).\n");
+        prompt.append("Use semantic HTML structure with proper sections and styling.\n");
+        prompt.append("Include internal CSS for professional formatting and layout.\n");
+        prompt.append("Use clean, educational design with good typography and spacing.\n");
+        prompt.append("Make it suitable for email viewing with responsive design.\n\n");
+
+        prompt.append("Structure the HTML document with these main sections:\n");
+        prompt.append("1. Header with day title and learning phase\n");
+        prompt.append("2. Daily Overview section\n");
+        prompt.append("3. Algorithm Practice Guide section\n");
+        prompt.append("4. Theory Deep Dive section\n");
+        prompt.append("5. Hands-on Coding Guide section\n");
+        prompt.append("6. Reflection & Documentation section\n");
+        prompt.append("7. Resources & Tomorrow's Prep section\n\n");
+
+        prompt.append("Use the following HTML structure template:\n");
+        prompt.append("<!DOCTYPE html>\n");
+        prompt.append("<html lang=\"en\">\n");
+        prompt.append("<head>\n");
+        prompt.append("    <meta charset=\"UTF-8\">\n");
+        prompt.append("    <title>Day ").append(learningDay.getDay()).append(": ").append(learningDay.getPhase()).append("</title>\n");
+        prompt.append("    <style>/* Include comprehensive CSS styling */</style>\n");
+        prompt.append("</head>\n");
+        prompt.append("<body>\n");
+        prompt.append("    <main>\n");
+        prompt.append("        <section class=\"block\">/* Content sections */</section>\n");
+        prompt.append("    </main>\n");
+        prompt.append("</body>\n");
+        prompt.append("</html>\n\n");
 
         prompt.append("**Content Requirements for: ").append(learningDay.getPhase()).append("**\n\n");
-
         prompt.append("**Guidelines for each section:**\n");
         prompt.append("- **Daily Overview**: 2-3 paragraphs on learning structure and time management\n");
         prompt.append("- **Algorithm Guidance**: Specific problem-solving approaches and practice strategies\n");
@@ -148,10 +150,11 @@ public class LearningContentGenerationService {
         prompt.append("- **Reflection Prompts**: Questions to guide learning reflection and documentation\n");
         prompt.append("- **Resources**: Links to documentation, tutorials, and tomorrow's preparation\n\n");
 
-        prompt.append("Make all content practical, actionable, and appropriate for a ").append(learningDay.getPhase()).append(" learning phase. ");
+        prompt.append("Make all content practical, actionable, and appropriate for a ")
+            .append(learningDay.getPhase()).append(" learning phase. ");
         prompt.append("Focus on building skills progressively and maintaining motivation throughout the 6-month journey.\n\n");
-
-        prompt.append("Include specific examples, code snippets where appropriate, and emphasize best practices for software development learning.");
+        prompt.append("Include specific examples, code snippets where appropriate, and emphasize best practices for software development learning.\n");
+        prompt.append("Output the complete HTML document only (no additional text before or after).\n");
 
         log.info("📝 Generated prompt for Day {} ({} characters)", learningDay.getDay(), prompt.length());
         return prompt.toString();

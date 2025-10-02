@@ -114,15 +114,25 @@ public class LearningEmailService {
     }
 
     /**
-     * Parse JSON content and convert to structured HTML with proper containers
+     * Parse content (either JSON or HTML) and convert to structured HTML with proper containers
      */
-    private String parseJsonToStructuredHtml(String jsonContent) {
-        log.debug("🔧 Parsing JSON content to structured HTML with enhanced formatting");
+    private String parseJsonToStructuredHtml(String content) {
+        log.debug("🔧 Processing content for email template insertion");
 
+        if (content == null || content.trim().isEmpty()) {
+            log.warn("⚠️ Empty content provided");
+            return "<div class=\"content-sections-grid\"><p><em>No content available.</em></p></div>";
+        }
+
+        // Check if content is HTML (complete document or fragments)
+        if (isHtmlContent(content)) {
+            log.debug("📄 Detected HTML content, extracting body content for email");
+            return extractAndFormatHtmlContent(content);
+        }
+
+        // Try to parse as JSON first
         try {
-            // Clean up the JSON content (remove any markdown formatting around it)
-            String cleanJson = cleanJsonContent(jsonContent);
-
+            String cleanJson = cleanJsonContent(content);
             JsonNode rootNode = objectMapper.readTree(cleanJson);
             StringBuilder htmlBuilder = new StringBuilder();
 
@@ -155,9 +165,9 @@ public class LearningEmailService {
             return result;
 
         } catch (Exception e) {
-            log.error("❌ Failed to parse JSON content: {}", e.getMessage());
-            // Fallback to basic markdown formatting if JSON parsing fails
-            return formatMarkdownToHtml(jsonContent);
+            log.debug("📝 Content is not valid JSON, treating as HTML/text: {}", e.getMessage());
+            // Fallback to HTML or markdown formatting
+            return formatContentAsHtml(content);
         }
     }
 
@@ -326,6 +336,131 @@ public class LearningEmailService {
             .replace(">", "&gt;")
             .replace("\"", "&quot;")
             .replace("'", "&#39;");
+    }
+
+    /**
+     * Check if content is HTML by looking for HTML tags
+     */
+    private boolean isHtmlContent(String content) {
+        if (content == null || content.trim().isEmpty()) {
+            return false;
+        }
+        
+        String trimmed = content.trim();
+        return trimmed.contains("<!DOCTYPE html>") || 
+               trimmed.contains("<html") || 
+               trimmed.contains("<body") || 
+               (trimmed.contains("<") && trimmed.contains(">") && 
+                (trimmed.contains("<h1>") || trimmed.contains("<h2>") || 
+                 trimmed.contains("<section") || trimmed.contains("<div")));
+    }
+
+    /**
+     * Extract content from HTML document and format for email template
+     */
+    private String extractAndFormatHtmlContent(String htmlContent) {
+        log.debug("🔄 Extracting and formatting HTML content for email template");
+        
+        try {
+            // If it's a complete HTML document, extract the body content
+            if (htmlContent.contains("<body")) {
+                int bodyStart = htmlContent.indexOf("<body");
+                int bodyContentStart = htmlContent.indexOf(">", bodyStart) + 1;
+                int bodyEnd = htmlContent.lastIndexOf("</body>");
+                
+                if (bodyContentStart > 0 && bodyEnd > bodyContentStart) {
+                    String bodyContent = htmlContent.substring(bodyContentStart, bodyEnd);
+                    log.debug("📤 Extracted body content ({} characters)", bodyContent.length());
+                    return enhanceHtmlForEmailTemplate(bodyContent);
+                }
+            }
+            
+            // If it contains main content, extract that
+            if (htmlContent.contains("<main")) {
+                int mainStart = htmlContent.indexOf("<main");
+                int mainContentStart = htmlContent.indexOf(">", mainStart) + 1;
+                int mainEnd = htmlContent.lastIndexOf("</main>");
+                
+                if (mainContentStart > 0 && mainEnd > mainContentStart) {
+                    String mainContent = htmlContent.substring(mainContentStart, mainEnd);
+                    log.debug("📤 Extracted main content ({} characters)", mainContent.length());
+                    return enhanceHtmlForEmailTemplate(mainContent);
+                }
+            }
+            
+            // Otherwise, use the content as-is but enhance it
+            log.debug("📤 Using full HTML content with enhancements");
+            return enhanceHtmlForEmailTemplate(htmlContent);
+            
+        } catch (Exception e) {
+            log.error("❌ Error extracting HTML content: {}", e.getMessage(), e);
+            return formatContentAsHtml(htmlContent);
+        }
+    }
+
+    /**
+     * Enhance HTML content for better email template integration
+     */
+    private String enhanceHtmlForEmailTemplate(String htmlContent) {
+        log.debug("✨ Enhancing HTML content for email template integration");
+        
+        StringBuilder enhanced = new StringBuilder();
+        enhanced.append("<div class=\"ai-generated-content\">\n");
+        
+        // Clean up the HTML content
+        String cleanHtml = htmlContent
+            .replaceAll("<!DOCTYPE[^>]*>", "")
+            .replaceAll("<html[^>]*>", "")
+            .replaceAll("</html>", "")
+            .replaceAll("<head>.*?</head>", "")
+            .replaceAll("<body[^>]*>", "")
+            .replaceAll("</body>", "")
+            .replaceAll("<header[^>]*>.*?</header>", "")
+            .replaceAll("<footer[^>]*>.*?</footer>", "")
+            .trim();
+        
+        // Add the cleaned content with email-specific enhancements
+        enhanced.append(addEmailSpecificStyles(cleanHtml));
+        enhanced.append("</div>\n");
+        
+        String result = enhanced.toString();
+        log.debug("✅ HTML content enhanced for email template ({} characters)", result.length());
+        return result;
+    }
+
+    /**
+     * Add email-specific CSS classes and styling to HTML content
+     */
+    private String addEmailSpecificStyles(String htmlContent) {
+        return htmlContent
+            .replaceAll("<section([^>]*)class=\"([^\"]*)\"([^>]*)>", 
+                       "<section$1class=\"$2 email-section\"$3>")
+            .replaceAll("<section(?![^>]*class)", "<section class=\"email-section\"")
+            .replaceAll("<div([^>]*)class=\"block\"([^>]*)>", 
+                       "<div$1class=\"block email-content-block\"$2>")
+            .replaceAll("<h1([^>]*)>", "<h1$1 class=\"email-h1\">")
+            .replaceAll("<h2([^>]*)>", "<h2$1 class=\"email-h2\">")
+            .replaceAll("<h3([^>]*)>", "<h3$1 class=\"email-h3\">")
+            .replaceAll("<pre([^>]*)>", "<pre$1 class=\"email-code-block\">");
+    }
+
+    /**
+     * Format content as HTML when it's not valid JSON or HTML
+     */
+    private String formatContentAsHtml(String content) {
+        log.debug("🔄 Formatting content as HTML");
+        
+        if (content == null || content.trim().isEmpty()) {
+            return "<div class=\"content-sections-grid\"><p><em>No content available.</em></p></div>";
+        }
+        
+        // If it's already HTML, enhance it
+        if (isHtmlContent(content)) {
+            return enhanceHtmlForEmailTemplate(content);
+        }
+        
+        // Otherwise, convert markdown-style formatting to HTML
+        return formatMarkdownToHtml(content);
     }
 
     /**
