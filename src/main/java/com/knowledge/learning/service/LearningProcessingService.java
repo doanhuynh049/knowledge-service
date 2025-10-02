@@ -56,16 +56,16 @@ public class LearningProcessingService {
 
         try {
             // Step 1: Generate AI prompt specific to the learning goals
-            log.debug("🧠 Generating AI prompt for: {}", learningDay.getLearningGoal());
+            log.info("🧠 Generating AI prompt for: {}", learningDay.getLearningGoal());
             String prompt = contentGenerationService.generateStructuredLearningPrompt(learningDay);
-
+            log.info("✅ AI prompt generated for Day {} prompt: ", day, prompt);
             // Step 2: Get AI response
-            log.debug("🤖 Requesting AI response for Day {} content...", day);
+            log.info("🤖 Requesting AI response for Day {} content...", day);
             String aiResponse = contentGenerationService.getAIResponse(prompt);
-            log.info("✅ AI response generated for Day {} ({} characters)", day, aiResponse.length());
+            log.info("✅ AI response generated for Day {} response: ", day, aiResponse);
 
             // Step 3: Send structured email
-            log.debug("📧 Preparing structured email for Day {}...", day);
+            log.info("📧 Preparing structured email for Day {}...", day);
             emailService.sendStructuredLearningEmail(learningDay, aiResponse);
             log.info("📨 Learning email sent successfully for Day {}", day);
 
@@ -91,7 +91,7 @@ public class LearningProcessingService {
      * Get current learning progress with detailed logging
      */
     public LearningExcelService.LearningProgress getLearningProgress() {
-        log.debug("📊 Retrieving learning progress...");
+        log.info("📊 Retrieving learning progress...");
 
         LearningExcelService.LearningProgress progress = excelService.getLearningProgress();
 
@@ -172,7 +172,7 @@ public class LearningProcessingService {
      * Get next few days preview
      */
     public java.util.List<LearningDay> getUpcomingDays(int count) {
-        log.debug("👀 Getting preview of next {} upcoming days...", count);
+        log.info("👀 Getting preview of next {} upcoming days...", count);
 
         java.util.List<LearningDay> allDays = excelService.getAllLearningDays();
         java.util.List<LearningDay> upcomingDays = allDays.stream()

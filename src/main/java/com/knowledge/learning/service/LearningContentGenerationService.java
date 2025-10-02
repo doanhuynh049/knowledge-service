@@ -57,7 +57,7 @@ public class LearningContentGenerationService {
 
             HttpEntity<Map<String, Object>> request = new HttpEntity<>(requestBody, headers);
 
-            log.debug("🌐 Sending request to Gemini API...");
+            log.info("🌐 Sending request to Gemini API...");
             ResponseEntity<Map> response = restTemplate.postForEntity(geminiApiUrl, request, Map.class);
 
             if (response.getBody() != null) {
@@ -153,7 +153,7 @@ public class LearningContentGenerationService {
 
         prompt.append("Include specific examples, code snippets where appropriate, and emphasize best practices for software development learning.");
 
-        log.debug("📝 Generated prompt for Day {} ({} characters)", learningDay.getDay(), prompt.length());
+        log.info("📝 Generated prompt for Day {} ({} characters)", learningDay.getDay(), prompt.length());
         return prompt.toString();
     }
 
