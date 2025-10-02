@@ -112,7 +112,7 @@ public class StockContentGenerationService {
             generationConfig.put("temperature", 0.7);
             generationConfig.put("topK", 40);
             generationConfig.put("topP", 0.95);
-            generationConfig.put("maxOutputTokens", 2048);
+            generationConfig.put("maxOutputTokens", 50000);
             requestBody.put("generationConfig", generationConfig);
 
             HttpEntity<Map<String, Object>> request = new HttpEntity<>(requestBody, headers);

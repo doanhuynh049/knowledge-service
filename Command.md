@@ -353,6 +353,89 @@ fi
 
 ---
 
+## 🎓 6-Month Learning Path Service Commands (NEW)
+
+The 6-month learning path service provides a comprehensive 180-day programming journey with daily tasks covering algorithms, best practices, and hands-on coding.
+
+### 🚀 Learning Path Processing Commands
+
+#### Process Today's Learning
+```bash
+# Process today's learning path automatically
+curl -X POST http://localhost:8283/api/learning-path/learn/today
+```
+
+#### Process Specific Day
+```bash
+# Process specific day by number (1-180)
+curl -X POST http://localhost:8283/api/learning-path/learn/day/1
+curl -X POST http://localhost:8283/api/learning-path/learn/day/30
+curl -X POST http://localhost:8283/api/learning-path/learn/day/90
+curl -X POST http://localhost:8283/api/learning-path/learn/day/180
+```
+
+#### Reset Learning Day for Reprocessing  
+```bash
+# Reset a specific day back to OPEN status
+curl -X PUT http://localhost:8283/api/learning-path/learn/day/1/reset
+curl -X PUT http://localhost:8283/api/learning-path/learn/day/15/reset
+curl -X PUT http://localhost:8283/api/learning-path/learn/day/45/reset
+```
+
+### 📊 Learning Progress & Statistics Commands
+
+#### Get Learning Progress
+```bash
+# Get comprehensive 6-month learning progress
+curl -s http://localhost:8283/api/learning-path/progress | python3 -m json.tool
+```
+
+#### Get Complete Curriculum
+```bash
+# View all 180 learning days with their status
+curl -s http://localhost:8283/api/learning-path/curriculum | python3 -m json.tool
+```
+
+#### Get Next Learning Day
+```bash
+# See what's coming up next in your learning journey
+curl -s http://localhost:8283/api/learning-path/next | python3 -m json.tool
+```
+
+#### Get Upcoming Days Preview
+```bash
+# Preview next 5 upcoming days (default)
+curl -s http://localhost:8283/api/learning-path/upcoming | python3 -m json.tool
+
+# Preview next 10 upcoming days
+curl -s "http://localhost:8283/api/learning-path/upcoming?count=10" | python3 -m json.tool
+
+# Preview next week (7 days)
+curl -s "http://localhost:8283/api/learning-path/upcoming?count=7" | python3 -m json.tool
+```
+
+### 📖 Learning Phase Commands
+
+#### Get Days by Learning Phase
+```bash
+# Get all Foundation phase days (Month 1-2)
+curl -s http://localhost:8283/api/learning-path/phase/Foundation | python3 -m json.tool
+
+# Get all Intermediate phase days (Month 3-4)  
+curl -s http://localhost:8283/api/learning-path/phase/Intermediate | python3 -m json.tool
+
+# Get all Advanced phase days (Month 5-6)
+curl -s http://localhost:8283/api/learning-path/phase/Advanced | python3 -m json.tool
+```
+
+### 🏥 Learning Path Service Health Check
+```bash
+# Check 6-month learning path service status
+curl -s http://localhost:8283/api/learning-path/health | python3 -m json.tool
+```
+
+---
+
 ## 📚 Enhanced Stock Learning Service Commands (NEW)
 
 The enhanced stock learning service provides a structured 20-day curriculum with comprehensive logging and progress tracking.
@@ -448,11 +531,34 @@ curl -s http://localhost:8283/api/topics/stats | python3 -m json.tool
 echo -e "\n=== Original Stock Service ==="
 curl -s http://localhost:8283/api/stock/status | python3 -m json.tool
 
+echo -e "\n=== 6-Month Learning Path Service ==="
+curl -s http://localhost:8283/api/learning-path/progress | python3 -m json.tool
+
+echo -e "\n=== Learning Path Service Health ==="
+curl -s http://localhost:8283/api/learning-path/health | python3 -m json.tool
+
 echo -e "\n=== Enhanced Stock Learning Service ==="
 curl -s http://localhost:8283/api/enhanced-stock/progress | python3 -m json.tool
 
 echo -e "\n=== Enhanced Service Health ==="
 curl -s http://localhost:8283/api/enhanced-stock/health | python3 -m json.tool
+```
+
+### 6-Month Learning Path Dashboard
+```bash
+# Create a comprehensive 6-month learning dashboard
+echo "=== 6-MONTH PROGRAMMING LEARNING DASHBOARD ==="
+echo "Current Progress:"
+curl -s http://localhost:8283/api/learning-path/progress | jq '.progress.totalDays, .progress.completedDays, .progress.completionRate'
+
+echo -e "\nNext Learning Day:"
+curl -s http://localhost:8283/api/learning-path/next | jq '.nextDay.day, .nextDay.topic, .nextDay.phase'
+
+echo -e "\nUpcoming This Week:"
+curl -s "http://localhost:8283/api/learning-path/upcoming?count=7" | jq '.upcomingDays[] | "Day \(.day): \(.topic)"'
+
+echo -e "\nPhase Distribution:"
+curl -s http://localhost:8283/api/learning-path/curriculum | jq '.curriculum | group_by(.phase) | map({phase: .[0].phase, count: length})'
 ```
 
 ### Learning Progress Dashboard
@@ -472,6 +578,101 @@ curl -s "http://localhost:8283/api/enhanced-stock/upcoming?count=5" | jq '.upcom
 ---
 
 ## 🚀 Enhanced Testing Scenarios
+
+### Complete 6-Month Learning Path Workflow Test
+```bash
+# 1. Check service health
+echo "=== Learning Path Service Health ==="
+curl -s http://localhost:8283/api/learning-path/health | python3 -m json.tool
+
+# 2. Check current progress
+echo -e "\n=== Initial Progress ==="
+curl -s http://localhost:8283/api/learning-path/progress | python3 -m json.tool
+
+# 3. See what's next
+echo -e "\n=== Next Learning Day ==="
+curl -s http://localhost:8283/api/learning-path/next | python3 -m json.tool
+
+# 4. Process today's learning
+echo -e "\n=== Processing Today's Learning ==="
+curl -X POST http://localhost:8283/api/learning-path/learn/today
+
+# 5. Check updated progress
+echo -e "\n=== Updated Progress ==="
+curl -s http://localhost:8283/api/learning-path/progress | python3 -m json.tool
+
+# 6. Preview upcoming week
+echo -e "\n=== Upcoming Week Preview ==="
+curl -s "http://localhost:8283/api/learning-path/upcoming?count=7" | python3 -m json.tool
+```
+
+### Test Specific Day Processing (6-Month Path)
+```bash
+# Process Day 1 (Foundation Start)
+curl -X POST http://localhost:8283/api/learning-path/learn/day/1
+
+# Check what Day 1 covers
+curl -s http://localhost:8283/api/learning-path/curriculum | jq '.curriculum[] | select(.day == 1)'
+
+# Process Day 30 (Foundation Month End)
+curl -X POST http://localhost:8283/api/learning-path/learn/day/30
+
+# Process Day 90 (Intermediate Phase Mid-point)
+curl -X POST http://localhost:8283/api/learning-path/learn/day/90
+
+# Process Day 180 (Advanced Phase Completion)
+curl -X POST http://localhost:8283/api/learning-path/learn/day/180
+```
+
+### Test Phase-Based Learning (6-Month Path)
+```bash
+# See all Foundation topics (Days 1-60)
+curl -s http://localhost:8283/api/learning-path/phase/Foundation | jq '.days[] | "Day \(.day): \(.topic)"'
+
+# See all Intermediate topics (Days 61-120)
+curl -s http://localhost:8283/api/learning-path/phase/Intermediate | jq '.days[] | "Day \(.day): \(.topic)"'
+
+# See all Advanced topics (Days 121-180)
+curl -s http://localhost:8283/api/learning-path/phase/Advanced | jq '.days[] | "Day \(.day): \(.topic)"'
+```
+
+### Reset and Reprocess Workflow (6-Month Path)
+```bash
+# Reset Day 15 for reprocessing
+curl -X PUT http://localhost:8283/api/learning-path/learn/day/15/reset
+
+# Verify it's back to OPEN status
+curl -s http://localhost:8283/api/learning-path/curriculum | jq '.curriculum[] | select(.day == 15) | .status'
+
+# Reprocess Day 15
+curl -X POST http://localhost:8283/api/learning-path/learn/day/15
+
+# Check progress after reprocessing
+curl -s http://localhost:8283/api/learning-path/progress | jq '.progress.completedDays, .progress.completionRate'
+```
+
+### Weekly Progress Tracking (6-Month Path)
+```bash
+# Create weekly tracking script
+echo '#!/bin/bash
+echo "=== WEEKLY LEARNING PATH PROGRESS ==="
+echo "Date: $(date)"
+echo ""
+
+echo "Overall Progress:"
+curl -s http://localhost:8283/api/learning-path/progress | jq ".progress | \"Completed: \(.completedDays)/\(.totalDays) days (\(.completionRate)%)\""
+
+echo ""
+echo "Current Phase Status:"
+curl -s http://localhost:8283/api/learning-path/next | jq -r "if .nextDay then \"Next: Day \(.nextDay.day) - \(.nextDay.phase): \(.nextDay.topic)\" else \"🎉 All 180 days completed!\" end"
+
+echo ""
+echo "This Week Plan:"
+curl -s "http://localhost:8283/api/learning-path/upcoming?count=7" | jq -r ".upcomingDays[]? | \"Day \(.day): \(.topic)\""
+
+echo ""
+echo "========================"' > weekly_progress.sh && chmod +x weekly_progress.sh && ./weekly_progress.sh
+```
 
 ### Complete Enhanced Learning Workflow Test
 ```bash
@@ -524,6 +725,63 @@ curl -s http://localhost:8283/api/enhanced-stock/curriculum | jq '.curriculum[] 
 # Reprocess Day 3
 curl -X POST http://localhost:8283/api/enhanced-stock/learn/day/3
 ```
+
+---
+
+## 📋 6-Month Programming Learning Curriculum Overview
+
+The 6-month learning path service includes a **180-day comprehensive programming journey**:
+
+### **Phase 1 - Foundation (Days 1-60) - Months 1-2**
+**Week 1-2: Programming Fundamentals**
+- Algorithm basics & time complexity
+- Data structures fundamentals (arrays, linked lists)
+- Clean Code principles & naming conventions
+- Git version control & GitHub workflow
+
+**Week 3-4: Problem Solving Patterns**
+- Sorting algorithms (bubble, selection, insertion, merge, quick)
+- Searching algorithms (linear, binary)
+- Two-pointer technique & sliding window
+- Basic recursion & dynamic programming
+
+**Week 5-8: Core Development Skills**
+- Object-oriented programming principles
+- Design patterns (singleton, factory, observer)
+- Code refactoring & testing fundamentals
+- Documentation & code review practices
+
+### **Phase 2 - Intermediate (Days 61-120) - Months 3-4**
+**Week 9-12: Advanced Data Structures**
+- Trees & binary search trees
+- Heaps & priority queues
+- Hash tables & collision handling
+- Graphs & basic graph algorithms
+
+**Week 13-16: System Design Fundamentals**
+- Database design & normalization
+- API design & REST principles
+- Caching strategies & performance optimization
+- Microservices architecture basics
+
+### **Phase 3 - Advanced (Days 121-180) - Months 5-6**
+**Week 17-20: Advanced Algorithms**
+- Dynamic programming mastery
+- Graph algorithms (DFS, BFS, shortest path)
+- Advanced tree algorithms
+- Greedy algorithms & backtracking
+
+**Week 21-24: Production-Ready Development**
+- Scalable system architecture
+- Security best practices
+- Performance monitoring & optimization
+- DevOps fundamentals & deployment strategies
+
+**Week 25-26: Capstone & Portfolio**
+- Full-stack project development
+- Code portfolio optimization
+- Technical interview preparation
+- Career development & networking
 
 ---
 

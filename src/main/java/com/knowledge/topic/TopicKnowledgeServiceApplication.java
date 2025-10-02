@@ -9,7 +9,7 @@ import org.springframework.web.client.RestTemplate;
 
 @SpringBootApplication
 @EnableScheduling
-@ComponentScan(basePackages = {"com.knowledge.topic", "com.knowledge.stock"})
+@ComponentScan(basePackages = {"com.knowledge.topic", "com.knowledge.stock", "com.knowledge.learning"})
 public class TopicKnowledgeServiceApplication {
 
     public static void main(String[] args) {
