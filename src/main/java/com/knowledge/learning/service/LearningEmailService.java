@@ -70,6 +70,38 @@ public class LearningEmailService {
     }
 
     /**
+     * Send structured learning email with EML file attachment
+     */
+    public void sendStructuredLearningEmailWithAttachment(LearningDay learningDay, String content, java.io.File emlFile) {
+        log.info("📧 Preparing structured learning email with EML attachment for Day {}: {}",
+            learningDay.getDay(), learningDay.getPhase());
+
+        if (!emailEnabled) {
+            log.warn("📨 Email sending is disabled. Would have sent Day {} email with attachment", learningDay.getDay());
+            return;
+        }
+
+        try {
+            String subject = learningDay.getEmailSubject();
+            String htmlContent = loadAndProcessTemplate(learningDay, content);
+
+            log.debug("📝 Email with attachment prepared - Subject: {}", subject);
+            log.debug("📄 Email content length: {} characters", htmlContent.length());
+            log.debug("📎 Attachment: {} ({} bytes)", emlFile.getName(), emlFile.length());
+
+            sendEmailWithAttachment(subject, htmlContent, emlFile);
+
+            log.info("✅ Structured learning email with EML attachment sent successfully for Day {} - {}",
+                learningDay.getDay(), learningDay.getPhase());
+                
+        } catch (Exception e) {
+            log.error("❌ Failed to send structured learning email with attachment for Day {}: {}",
+                learningDay.getDay(), e.getMessage(), e);
+            throw new RuntimeException("Email with attachment sending failed: " + e.getMessage(), e);
+        }
+    }
+
+    /**
      * Load HTML template and replace placeholders
      */
     private String loadAndProcessTemplate(LearningDay learningDay, String content) throws IOException {
@@ -111,6 +143,25 @@ public class LearningEmailService {
 
         mailSender.send(message);
         log.debug("📬 Email sent successfully to: {}", toEmail);
+    }
+
+    /**
+     * Send email with attachment
+     */
+    private void sendEmailWithAttachment(String subject, String htmlContent, java.io.File emlFile) throws MessagingException {
+        log.debug("📮 Sending email with subject: {} and attachment: {}", subject, emlFile.getName());
+
+        MimeMessage message = mailSender.createMimeMessage();
+        MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+        helper.setFrom(fromEmail);
+        helper.setTo(toEmail.split(","));
+        helper.setSubject(subject);
+        helper.setText(htmlContent, true);
+        helper.addAttachment(emlFile.getName(), emlFile);
+
+        mailSender.send(message);
+        log.debug("📬 Email with attachment sent successfully to: {}", toEmail);
     }
 
     /**

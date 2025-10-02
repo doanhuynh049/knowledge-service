@@ -13,6 +13,8 @@ public class LearningProcessingService {
     private final LearningExcelService excelService;
     private final LearningContentGenerationService contentGenerationService;
     private final LearningEmailService emailService;
+    private final LearningProblemGenerationService problemGenerationService;
+    private final LearningEmlFileService emlFileService;
 
     /**
      * Process today's learning day with comprehensive logging
@@ -58,31 +60,63 @@ public class LearningProcessingService {
             // Step 1: Generate AI prompt specific to the learning goals
             log.info("🧠 Generating AI prompt for: {}", learningDay.getLearningGoal());
             String prompt = contentGenerationService.generateStructuredLearningPrompt(learningDay);
-            log.info("✅ AI prompt generated for Day {} prompt: {} ", day, prompt);
-            // Step 2: Get AI response
+            log.info("✅ AI prompt generated for Day {} ({} characters)", day, prompt.length());
+            
+            // Step 2: Get AI response for learning content
             log.info("🤖 Requesting AI response for Day {} content...", day);
             String aiResponse = contentGenerationService.getAIResponse(prompt);
-            log.info("✅ AI response generated for Day {} response: {} ", day, aiResponse);
+            log.info("✅ AI response generated for Day {} response: {})", day, aiResponse);
 
-            // Step 3: Send structured email
-            log.info("📧 Preparing structured email for Day {}...", day);
-            emailService.sendStructuredLearningEmail(learningDay, aiResponse);
-            log.info("📨 Learning email sent successfully for Day {}", day);
+            try {
+                Thread.sleep(2000); // Brief pause to ensure stability
+            } catch (InterruptedException e) {
+                log.warn("⚠️ Sleep interrupted during processing: {}", e.getMessage());
+                Thread.currentThread().interrupt(); // Restore interrupted status
+            }
+            
+            // Step 3: Generate problem-based learning content
+            log.info("🎯 Generating problem-based challenges for Day {}...", day);
+            String problemContent = problemGenerationService.generateProblemContent(learningDay);
+            log.info("✅ Problem content generated for Day {} ({} characters)", day, problemContent.length());
 
-            // Step 4: Mark as completed
-            String completionNotes = String.format("Completed on %s. AI content: %d chars. Email sent successfully.",
+            // Step 4: Create EML file with problem content
+            log.info("📧 Creating EML file with problems for Day {}...", day);
+            java.io.File emlFile = emlFileService.createEmlFile(learningDay, problemContent);
+            log.info("📎 EML file created: {} ({} bytes)", emlFile.getName(), emlFile.length());
+
+            // Step 5: Send structured email with EML attachment
+            log.info("📧 Preparing structured email with EML attachment for Day {}...", day);
+            emailService.sendStructuredLearningEmailWithAttachment(learningDay, aiResponse, emlFile);
+            log.info("📨 Learning email with EML attachment sent successfully for Day {}", day);
+
+            // Step 6: Mark as completed with comprehensive notes
+            String completionNotes = String.format(
+                "Completed on %s. Learning content: %d chars. Problems: %d chars. EML file: %s (%d bytes). Email with attachment sent successfully.",
                 java.time.LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")),
-                aiResponse.length());
+                aiResponse.length(),
+                problemContent.length(),
+                emlFile.getName(),
+                emlFile.length()
+            );
 
             excelService.markLearningDayCompleted(day, completionNotes);
 
-            // Step 5: Log progress
+            // Step 7: Log progress
             logProgress();
+
+            // Step 8: Cleanup old EML files periodically (every 10 days)
+            if (day % 10 == 0) {
+                log.info("🧹 Performing periodic EML cleanup (Day {})", day);
+                emlFileService.cleanupOldEmlFiles();
+            }
 
         } catch (Exception e) {
             log.error("❌ Error processing Day {}: {}", day, e.getMessage(), e);
             // Mark as error in Excel
-            excelService.markLearningDayError(day, e.getMessage());
+            String errorMessage = String.format("Error on %s: %s", 
+                java.time.LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")),
+                e.getMessage());
+            excelService.markLearningDayError(day, errorMessage);
             throw e;
         }
     }
